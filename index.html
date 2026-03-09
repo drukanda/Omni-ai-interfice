@@ -1,95 +1,76 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRUKANDA OMNI-AI | ELITE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: linear-gradient(135deg, #020617 0%, #0f172a 100%); min-height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .ai-card { border-left: 4px solid #22d3ee; background: rgba(34, 211, 238, 0.05); }
-        .user-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
-    </style>
-</head>
-<body class="p-4 flex flex-col items-center h-screen">
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-    <div class="w-full max-w-md text-center py-4">
-        <h1 class="text-2xl font-black tracking-widest text-cyan-400">DRUKANDA <span class="text-white opacity-80">OMNI</span></h1>
-        <div class="flex justify-center gap-1 mt-1">
-            <div class="h-1 w-8 bg-cyan-500 rounded-full animate-pulse"></div>
-            <div class="h-1 w-2 bg-cyan-500 rounded-full"></div>
+module.exports = async (req, res) => {
+  // Pengaturan Header agar tidak error saat dipanggil
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // 1. TAMPILAN (FRONTEND) - Tetap gaya lama kamu
+  if (req.method === 'GET') {
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { background: #080a0c; color: #00f2ff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+          .status { text-align: center; padding: 10px; font-size: 10px; letter-spacing: 2px; border-bottom: 1px solid #1a1a1a; color: #00f2ff; opacity: 0.7; }
+          #display { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+          .msg { max-width: 80%; padding: 10px; border-radius: 5px; font-size: 14px; }
+          .user { align-self: flex-end; color: #fff; background: #1a1a1a; }
+          .ai { align-self: flex-start; color: #00f2ff; border-left: 1px solid #00f2ff; }
+          .input-box { padding: 20px; border-top: 1px solid #1a1a1a; }
+          input { width: 100%; background: transparent; border: 1px solid #00f2ff; color: #fff; padding: 12px; outline: none; box-sizing: border-box; }
+        </style>
+      </head>
+      <body>
+        <div class="status">NEURAL LINK V4.2 ACTIVE</div>
+        <div id="display"></div>
+        <div class="input-box">
+          <input type="text" id="in" placeholder="Ketik perintah..." onkeypress="exec(event)">
         </div>
-    </div>
-
-    <div id="display" class="w-full max-w-md glass rounded-3xl flex-1 overflow-y-auto p-5 mb-4 shadow-2xl flex flex-col gap-4">
-        <div class="text-[10px] text-cyan-500 text-center tracking-[0.3em] uppercase opacity-50">Neural Link v4.0 Active</div>
-    </div>
-
-    <div class="w-full max-w-md pb-4 space-y-3">
-        <div class="relative">
-            <textarea id="prompt" placeholder="Tuliskan perintah..." 
-                      class="w-full glass rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 h-20 resize-none shadow-inner bg-black/20"></textarea>
-        </div>
-        
-        <button onclick="askAI()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2">
-            <span>🚀 JALANKAN PERINTAH</span>
-        </button>
-    </div>
-
-    <script>
-        // KUNCI BARU KAMU SUDAH TERPASANG
-        const API_KEY = "AIzaSyBKWKwW6YUNppdGNfY_unMl_1SmvrEDwWk";
-
-        async function askAI() {
-            const input = document.getElementById('prompt');
-            const box = document.getElementById('display');
-            const val = input.value.trim();
-            if(!val) return;
-
-            // Render Pesan User
-            box.innerHTML += `<div class="user-card p-4 rounded-2xl self-end max-w-[85%] ml-auto text-sm"><b>USER:</b> ${val}</div>`;
-            
-            const msg = document.createElement('div');
-            msg.className = "ai-card p-4 rounded-2xl self-start max-w-[90%] text-sm shadow-md animate-pulse";
-            msg.innerHTML = "<b>AI:</b> Mengakses Quantum Core...";
-            box.appendChild(msg);
-            input.value = "";
-            box.scrollTop = box.scrollHeight;
-
-            // List Model untuk Auto-Switch
-            const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
-            let success = false;
-
-            for (let modelName of models) {
-                if (success) break;
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
-                    });
-                    
-                    const data = await res.json();
-                    
-                    if (data.candidates && data.candidates[0].content) {
-                        msg.classList.remove('animate-pulse');
-                        msg.innerHTML = `<b>DRUKANDA AI:</b> ${data.candidates[0].content.parts[0].text}`;
-                        success = true;
-                    }
-                } catch (e) {
-                    console.error("Gagal di model " + modelName);
-                }
+        <script>
+          async function exec(e) {
+            if (e.key === 'Enter' && e.target.value) {
+              const d = document.getElementById('display');
+              const val = e.target.value;
+              d.innerHTML += '<div class="msg user">' + val + '</div>';
+              e.target.value = '';
+              d.scrollTop = d.scrollHeight;
+              
+              const res = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ prompt: val })
+              });
+              const data = await res.json();
+              d.innerHTML += '<div class="msg ai">' + (data.reply || data.error) + '</div>';
+              d.scrollTop = d.scrollHeight;
             }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  }
 
-            if (!success) {
-                msg.classList.remove('animate-pulse');
-                msg.innerHTML = `<div class="text-red-400 font-bold underline">ERROR CRITICAL:</div> Jalur ditolak. Pastikan API Key di Google AI Studio sudah "Active" dan tidak ada batasan region.`;
-            }
-            box.scrollTop = box.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+  // 2. MESIN AI (BACKEND) - Solusi error v1beta
+  try {
+    const { prompt } = req.body;
+    if (!process.env.GEMINI_API_KEY) return res.status(500).json({ error: "KEY MISSING" });
+
+    // PAKSA KE MODEL STABIL
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    res.status(200).json({ reply: response.text() });
+  } catch (err) {
+    res.status(500).json({ error: "LINK ERROR", details: err.message });
+  }
+};
