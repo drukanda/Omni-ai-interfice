@@ -3,98 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-AI SLIM</title>
+    <title>OMNI-AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #050505; color: #00f3ff; font-family: 'Courier New', monospace; }
-        .terminal { border: 1px solid #164e63; background: rgba(0,0,0,0.8); }
-        .btn { border: 1px solid #22d3ee; transition: 0.3s; font-size: 10px; }
-        .btn:active { background: #22d3ee; color: #000; }
+        body { background: #000; color: #00f3ff; font-family: monospace; }
+        .terminal-box { border: 1px solid #083344; background: rgba(0,0,0,0.9); height: 60vh; }
+        .btn-ui { border: 1px solid #22d3ee; font-size: 10px; padding: 8px; border-radius: 4px; }
         ::-webkit-scrollbar { width: 2px; }
     </style>
 </head>
-<body class="p-3 h-screen flex flex-col">
+<body class="p-4 flex flex-col h-screen">
 
-    <div class="flex justify-between items-center mb-3 border-b border-cyan-900 pb-1">
-        <h1 class="text-xs font-bold tracking-widest italic text-white">DRUKANDA <span class="text-cyan-400">OMNI-AI</span></h1>
-        <div class="flex gap-1">
-            <div class="w-1 h-3 bg-cyan-500 animate-bounce"></div>
-            <div class="w-1 h-3 bg-cyan-500 animate-bounce [animation-delay:0.2s]"></div>
+    <div class="flex justify-between items-center mb-4 border-b border-cyan-900 pb-2">
+        <h1 class="text-xs font-bold italic">DRUKANDA <span class="text-white">OMNI-AI</span></h1>
+        <div class="flex gap-1 h-3">
+            <div class="w-1 bg-cyan-500 animate-pulse"></div>
+            <div class="w-1 bg-cyan-400 animate-pulse" style="animation-delay: 0.2s"></div>
         </div>
     </div>
 
-    <div id="display" class="flex-1 terminal rounded-lg p-3 overflow-y-auto text-[11px] mb-3 space-y-3 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-        <div class="text-cyan-800 opacity-70 border-b border-cyan-950 pb-1">[LOG]: System Stabilized. Ready for Drukanda.</div>
+    <div id="display" class="terminal-box rounded-lg p-3 overflow-y-auto text-[11px] mb-4 space-y-3">
+        <div class="text-cyan-900 italic">[SYSTEM]: Link Established. Jalur v1/v1beta Sinkron.</div>
     </div>
 
-    <div class="space-y-2">
+    <div class="mt-auto space-y-3">
         <textarea id="prompt" placeholder="Ketik perintah..." 
-                  class="w-full bg-black border border-cyan-900 p-2 rounded-md text-white text-xs h-16 focus:border-cyan-400 outline-none"></textarea>
+                  class="w-full bg-black border border-cyan-900 p-2 rounded text-white text-xs h-20 outline-none focus:border-cyan-400"></textarea>
         
         <div class="grid grid-cols-3 gap-2">
-            <button onclick="runAI('tanya')" class="btn p-2 rounded-md font-bold uppercase tracking-tighter">💡 Tanya</button>
-            <button class="btn p-2 rounded-md font-bold uppercase opacity-30 text-purple-400">🎨 Image</button>
-            <button class="btn p-2 rounded-md font-bold uppercase opacity-30 text-blue-400">🎬 Video</button>
+            <button onclick="askAI()" class="btn-ui bg-cyan-950/20 text-cyan-400 font-bold uppercase">💡 Tanya</button>
+            <button class="btn-ui opacity-20 text-gray-500 uppercase">🎨 Gambar</button>
+            <button class="btn-ui opacity-20 text-gray-500 uppercase">🎬 Video</button>
         </div>
     </div>
 
     <script>
         const API_KEY = "AIzaSyA28Oxr6apgNTzdVkJ34xvEmrsPv5fNGhw";
 
-        async function runAI(mode) {
-            const promptInput = document.getElementById('prompt');
-            const display = document.getElementById('display');
-            const text = promptInput.value;
-            if (!text) return;
+        async function askAI() {
+            const input = document.getElementById('prompt');
+            const box = document.getElementById('display');
+            const val = input.value;
+            if(!val) return;
 
-            display.innerHTML += `<div class="text-gray-400 italic">> ${text}</div>`;
-            const aiMsg = document.createElement('div');
-            aiMsg.className = "text-cyan-300 pl-2 border-l-2 border-cyan-600 my-2";
-            aiMsg.innerHTML = "Processing...";
-            display.appendChild(aiMsg);
-            promptInput.value = "";
-            display.scrollTop = display.scrollHeight;
+            box.innerHTML += `<div class="text-gray-500">> ${val}</div>`;
+            const msg = document.createElement('div');
+            msg.className = "text-cyan-400 border-l border-cyan-700 pl-2 my-2";
+            msg.innerText = "Connecting...";
+            box.appendChild(msg);
+            input.value = "";
+            box.scrollTop = box.scrollHeight;
 
-            try {
-                // INI JALUR PALING PASTI UNTUK GEMINI 1.5 FLASH DI TAHUN 2026
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: text }] }]
-                    })
-                });
+            // DAFTAR MODEL UNTUK DICOBA SATU PER SATU JIKA ERROR
+            const models = [
+                "v1beta/models/gemini-1.5-flash",
+                "v1/models/gemini-pro"
+            ];
 
-                const data = await response.json();
-                
-                if (data.error) {
-                    // Jika masih "Not Found", kita paksa pakai model 'gemini-pro' sebagai cadangan otomatis
-                    if (data.error.message.includes("not found")) {
-                         return runBackup(text, aiMsg);
+            for (let path of models) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/${path}:generateContent?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.candidates && data.candidates[0].content) {
+                        msg.innerHTML = `<strong>AI:</strong> ${data.candidates[0].content.parts[0].text}`;
+                        box.scrollTop = box.scrollHeight;
+                        return; // BERHENTI JIKA BERHASIL
                     }
-                    throw new Error(data.error.message);
+                } catch (e) {
+                    continue; // COBA MODEL BERIKUTNYA
                 }
-
-                aiMsg.innerHTML = `<strong>AI:</strong> ${data.candidates[0].content.parts[0].text}`;
-            } catch (e) {
-                aiMsg.innerHTML = `<span class="text-red-500 text-[10px]">CRITICAL ERROR: ${e.message}</span>`;
             }
-            display.scrollTop = display.scrollHeight;
-        }
-
-        async function runBackup(text, element) {
-            element.innerHTML = "Switching to Backup Engine...";
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
-                });
-                const d = await res.json();
-                element.innerHTML = `<strong>AI (Bkp):</strong> ${d.candidates[0].content.parts[0].text}`;
-            } catch (err) {
-                element.innerHTML = `<span class="text-red-500 text-[10px]">ALL ENGINES FAILED. Check API Key Permissions.</span>`;
-            }
+            msg.innerHTML = `<span class="text-red-600 text-[10px]">SEMUA JALUR GAGAL. Periksa kuota atau izin API Key di Google AI Studio.</span>`;
         }
     </script>
 </body>
