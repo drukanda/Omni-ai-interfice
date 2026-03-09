@@ -2,39 +2,33 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OMNI-AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRUKANDA OMNI-AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #000; color: #00f3ff; font-family: monospace; }
-        .terminal-box { border: 1px solid #083344; background: rgba(0,0,0,0.9); height: 60vh; }
-        .btn-ui { border: 1px solid #22d3ee; font-size: 10px; padding: 8px; border-radius: 4px; }
-        ::-webkit-scrollbar { width: 2px; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; font-family: sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .ai-card { border-left: 4px solid #06b6d4; background: rgba(6, 182, 212, 0.1); }
     </style>
 </head>
-<body class="p-4 flex flex-col h-screen">
+<body class="p-4 flex flex-col items-center">
 
-    <div class="flex justify-between items-center mb-4 border-b border-cyan-900 pb-2">
-        <h1 class="text-xs font-bold italic">DRUKANDA <span class="text-white">OMNI-AI</span></h1>
-        <div class="flex gap-1 h-3">
-            <div class="w-1 bg-cyan-500 animate-pulse"></div>
-            <div class="w-1 bg-cyan-400 animate-pulse" style="animation-delay: 0.2s"></div>
-        </div>
+    <div class="w-full max-w-md text-center my-6">
+        <h1 class="text-3xl font-extrabold tracking-tighter text-cyan-400 drop-shadow-lg">DRUKANDA <span class="text-white">OMNI</span></h1>
+        <div class="h-1 w-20 bg-cyan-500 mx-auto mt-2 rounded-full"></div>
     </div>
 
-    <div id="display" class="terminal-box rounded-lg p-3 overflow-y-auto text-[11px] mb-4 space-y-3">
-        <div class="text-cyan-900 italic">[SYSTEM]: Link Established. Jalur v1/v1beta Sinkron.</div>
+    <div id="display" class="w-full max-w-md glass rounded-3xl h-[450px] overflow-y-auto p-5 mb-4 shadow-2xl flex flex-col gap-4">
+        <div class="text-cyan-300 text-xs text-center border-b border-white/10 pb-2">Quantum Engine Ready v3.0</div>
     </div>
 
-    <div class="mt-auto space-y-3">
-        <textarea id="prompt" placeholder="Ketik perintah..." 
-                  class="w-full bg-black border border-cyan-900 p-2 rounded text-white text-xs h-20 outline-none focus:border-cyan-400"></textarea>
+    <div class="w-full max-w-md space-y-3">
+        <textarea id="prompt" placeholder="Ketik pesan kamu di sini..." 
+                  class="w-full glass rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 h-24 shadow-inner"></textarea>
         
-        <div class="grid grid-cols-3 gap-2">
-            <button onclick="askAI()" class="btn-ui bg-cyan-950/20 text-cyan-400 font-bold uppercase">💡 Tanya</button>
-            <button class="btn-ui opacity-20 text-gray-500 uppercase">🎨 Gambar</button>
-            <button class="btn-ui opacity-20 text-gray-500 uppercase">🎬 Video</button>
-        </div>
+        <button onclick="askAI()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-lg">
+            🚀 TANYA AI SEKARANG
+        </button>
     </div>
 
     <script>
@@ -46,39 +40,36 @@
             const val = input.value;
             if(!val) return;
 
-            box.innerHTML += `<div class="text-gray-500">> ${val}</div>`;
+            // Chat User
+            box.innerHTML += `<div class="bg-white/10 p-4 rounded-2xl self-end max-w-[80%] ml-auto text-sm border border-white/5"><b>Kamu:</b> ${val}</div>`;
+            
             const msg = document.createElement('div');
-            msg.className = "text-cyan-400 border-l border-cyan-700 pl-2 my-2";
-            msg.innerText = "Connecting...";
+            msg.className = "ai-card p-4 rounded-2xl self-start max-w-[90%] text-sm shadow-lg animate-pulse";
+            msg.innerHTML = "<b>AI:</b> Sedang berpikir...";
             box.appendChild(msg);
             input.value = "";
             box.scrollTop = box.scrollHeight;
 
-            // DAFTAR MODEL UNTUK DICOBA SATU PER SATU JIKA ERROR
-            const models = [
-                "v1beta/models/gemini-1.5-flash",
-                "v1/models/gemini-pro"
-            ];
-
-            for (let path of models) {
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/${path}:generateContent?key=${API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
-                    });
-                    const data = await res.json();
-                    
-                    if (data.candidates && data.candidates[0].content) {
-                        msg.innerHTML = `<strong>AI:</strong> ${data.candidates[0].content.parts[0].text}`;
-                        box.scrollTop = box.scrollHeight;
-                        return; // BERHENTI JIKA BERHASIL
-                    }
-                } catch (e) {
-                    continue; // COBA MODEL BERIKUTNYA
+            try {
+                // PAKAI MODEL GEMINI-1.5-FLASH DENGAN JALUR TERBARU
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
+                });
+                const data = await res.json();
+                msg.classList.remove('animate-pulse');
+                
+                if (data.candidates) {
+                    msg.innerHTML = `<b>DRUKANDA AI:</b> ${data.candidates[0].content.parts[0].text}`;
+                } else {
+                    msg.innerHTML = `<span class="text-red-400 italic">Error: Jalur ditolak server. Cek API Studio.</span>`;
                 }
+            } catch (e) {
+                msg.classList.remove('animate-pulse');
+                msg.innerHTML = `<span class="text-red-400 italic">Koneksi Gagal.</span>`;
             }
-            msg.innerHTML = `<span class="text-red-600 text-[10px]">SEMUA JALUR GAGAL. Periksa kuota atau izin API Key di Google AI Studio.</span>`;
+            box.scrollTop = box.scrollHeight;
         }
     </script>
 </body>
