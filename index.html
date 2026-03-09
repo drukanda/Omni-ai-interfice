@@ -1,85 +1,48 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drukanda Omni-AI | Public Console</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background: radial-gradient(circle, #020617 0%, #000000 100%); color: #00f3ff; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(0, 243, 255, 0.1); }
-        .neon-border { border: 1px solid #00f3ff; box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
-        .output-box::-webkit-scrollbar { width: 4px; }
-        .output-box::-webkit-scrollbar-thumb { background: #00f3ff; }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
-    <div class="w-full max-w-5xl glass p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-cyan-500 opacity-10 rounded-full blur-3xl"></div>
+    // Gunakan API Key yang sudah kamu masukkan tadi
+    const API_KEY = "AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k";
+    const genAI = new GoogleGenerativeAI(API_KEY);
 
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-black tracking-tighter uppercase italic">Drukanda <span class="text-white">Omni-AI</span></h1>
-            <p class="text-xs text-cyan-500 mt-1 tracking-widest uppercase">Quantum Hybrid v3.0 | Status: Online</p>
-        </header>
+    // Fungsi ini dipaksa masuk ke objek window agar bisa dipanggil onclick
+    window.runAI = async function(mode) {
+        const promptInput = document.getElementById('prompt');
+        const display = document.getElementById('display');
+        const text = promptInput.value;
 
-        <div id="display" class="output-box h-[450px] overflow-y-auto mb-6 space-y-4 p-4 text-sm border-b border-cyan-900/50">
-            <div class="text-cyan-700 italic">[SYSTEM]: Link Established. Menunggu input untuk verifikasi publik atau kreasi visual...</div>
-        </div>
+        if (!text) return;
 
-        <div class="space-y-4">
-            <textarea id="prompt" placeholder="Ketik masalah publik atau deskripsi kreatif..." 
-                      class="w-full bg-black/50 border border-cyan-800 p-4 rounded-xl text-white focus:outline-none focus:border-cyan-400 h-24 resize-none"></textarea>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button onclick="runAI('tanya')" class="p-3 bg-cyan-900/20 border border-cyan-500 rounded-lg hover:bg-cyan-500 hover:text-black transition font-bold uppercase text-xs tracking-widest">💡 Tanya Publik (100% Akurat)</button>
-                <button onclick="runAI('gambar')" class="p-3 bg-purple-900/20 border border-purple-500 rounded-lg hover:bg-purple-500 hover:text-white transition font-bold uppercase text-xs tracking-widest">🎨 Generate Image (Nano 2)</button>
-                <button onclick="runAI('video')" class="p-3 bg-blue-900/20 border border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition font-bold uppercase text-xs tracking-widest">🎬 Render Video (Veo)</button>
-            </div>
-        </div>
-    </div>
+        // Tampilkan input User di layar
+        const userDiv = document.createElement('div');
+        userDiv.className = "text-white bg-white/5 p-3 rounded-lg ml-10 mb-4";
+        userDiv.innerHTML = `<strong>USER:</strong> ${text}`;
+        display.appendChild(userDiv);
 
-    <script type="module">
-        // Import Google AI SDK langsung via URL
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        // Siapkan tempat jawaban AI (Loading)
+        const aiMsgDiv = document.createElement('div');
+        aiMsgDiv.className = "text-cyan-400 p-3 rounded-lg mr-10 mb-4 bg-cyan-900/10 border-l-2 border-cyan-400";
+        aiMsgDiv.innerHTML = `<strong>AI:</strong> <span class="animate-pulse">Memproses ${mode.toUpperCase()}...</span>`;
+        display.appendChild(aiMsgDiv);
 
-        // KONFIGURASI API (Gunakan Key Ente)
-        const API_KEY = "AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k";
-        const genAI = new GoogleGenerativeAI(API_KEY);
+        promptInput.value = "";
+        display.scrollTop = display.scrollHeight;
 
-        window.runAI = async function(mode) {
-            const promptInput = document.getElementById('prompt');
-            const display = document.getElementById('display');
-            const text = promptInput.value;
-
-            if (!text) return;
-
-            // Update UI
-            display.innerHTML += `<div class="text-white bg-white/5 p-3 rounded-lg ml-10"><strong>USER:</strong> ${text}</div>`;
-            const aiMsgDiv = document.createElement('div');
-            aiMsgDiv.className = "text-cyan-400 p-3 rounded-lg mr-10 bg-cyan-900/10 border-l-2 border-cyan-400";
-            aiMsgDiv.innerHTML = `<strong>AI:</strong> <span class="animate-pulse">Memproses ${mode.toUpperCase()}...</span>`;
-            display.appendChild(aiMsgDiv);
-            promptInput.value = "";
-            display.scrollTop = display.scrollHeight;
-
-            try {
-                if (mode === 'tanya') {
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                    const result = await model.generateContent(`Anda adalah Pakar Publik. Jawab dengan data resmi 2026 dan akurasi 100% untuk: ${text}`);
-                    aiMsgDiv.innerHTML = `<strong>AI (VERIFIED):</strong> ${result.response.text()}`;
-                } else if (mode === 'gambar') {
-                    // Integrasi ke Nano Banana 2 (Placeholder untuk UI)
-                    aiMsgDiv.innerHTML = `<strong>STUDIO:</strong> Menginisialisasi Engine Nano Banana 2... <br><div class="mt-2 w-full h-40 bg-gray-800 rounded flex items-center justify-center italic text-gray-500 border border-dashed border-gray-600">Simulasi Output Gambar 4K untuk: ${text}</div>`;
-                } else {
-                    // Integrasi ke Veo (Placeholder untuk UI)
-                    aiMsgDiv.innerHTML = `<strong>STUDIO:</strong> Merender Video High-Fidelity via Veo Engine... <br><div class="mt-2 w-full h-40 bg-gray-900 rounded flex items-center justify-center italic text-gray-500 border border-dashed border-gray-700">Simulasi Output Video Pro: ${text}</div>`;
-                }
-            } catch (error) {
-                aiMsgDiv.innerHTML = `<span class="text-red-500 italic">Error: Gagal menghubungkan ke Quantum Core. Cek API Key.</span>`;
+        try {
+            if (mode === 'tanya') {
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                const result = await model.generateContent(text);
+                const responseText = await result.response.text();
+                aiMsgDiv.innerHTML = `<strong>AI (VERIFIED):</strong> ${responseText}`;
+            } else if (mode === 'gambar') {
+                aiMsgDiv.innerHTML = `<strong>STUDIO:</strong> Menginisialisasi Engine Nano Banana 2... <br><div class="mt-2 w-full h-40 bg-gray-800 rounded flex items-center justify-center italic text-gray-500 border border-dashed border-gray-600">Simulasi Output Gambar 4K untuk: ${text}</div>`;
+            } else if (mode === 'video') {
+                aiMsgDiv.innerHTML = `<strong>STUDIO:</strong> Merender Video High-Fidelity via Veo Engine... <br><div class="mt-2 w-full h-40 bg-gray-900 rounded flex items-center justify-center italic text-gray-500 border border-dashed border-gray-700">Simulasi Output Video Pro: ${text}</div>`;
             }
-            display.scrollTop = display.scrollHeight;
+        } catch (error) {
+            console.error(error);
+            aiMsgDiv.innerHTML = `<span class="text-red-500 italic">Error: Gagal menghubungkan ke Quantum Core. Pastikan API Key valid.</span>`;
         }
-    </script>
-</body>
-</html>
+        display.scrollTop = display.scrollHeight;
+    };
+</script>
