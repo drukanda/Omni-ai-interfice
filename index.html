@@ -3,71 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRUKANDA OMNI-AI</title>
+    <title>DRUKANDA OMNI-AI | ELITE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; font-family: sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .ai-card { border-left: 4px solid #06b6d4; background: rgba(6, 182, 212, 0.1); }
+        body { background: linear-gradient(135deg, #020617 0%, #0f172a 100%); min-height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .ai-card { border-left: 4px solid #22d3ee; background: rgba(34, 211, 238, 0.05); }
+        .user-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #22d3ee; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 flex flex-col items-center">
+<body class="p-4 flex flex-col items-center h-screen">
 
-    <div class="w-full max-w-md text-center my-6">
-        <h1 class="text-3xl font-extrabold tracking-tighter text-cyan-400 drop-shadow-lg">DRUKANDA <span class="text-white">OMNI</span></h1>
-        <div class="h-1 w-20 bg-cyan-500 mx-auto mt-2 rounded-full"></div>
+    <div class="w-full max-w-md text-center py-4">
+        <h1 class="text-2xl font-black tracking-widest text-cyan-400">DRUKANDA <span class="text-white opacity-80">OMNI</span></h1>
+        <div class="flex justify-center gap-1 mt-1">
+            <div class="h-1 w-8 bg-cyan-500 rounded-full animate-pulse"></div>
+            <div class="h-1 w-2 bg-cyan-500 rounded-full"></div>
+        </div>
     </div>
 
-    <div id="display" class="w-full max-w-md glass rounded-3xl h-[450px] overflow-y-auto p-5 mb-4 shadow-2xl flex flex-col gap-4">
-        <div class="text-cyan-300 text-xs text-center border-b border-white/10 pb-2">Quantum Engine Ready v3.0</div>
+    <div id="display" class="w-full max-w-md glass rounded-3xl flex-1 overflow-y-auto p-5 mb-4 shadow-2xl flex flex-col gap-4">
+        <div class="text-[10px] text-cyan-500 text-center tracking-[0.3em] uppercase opacity-50">Neural Link v4.0 Active</div>
     </div>
 
-    <div class="w-full max-w-md space-y-3">
-        <textarea id="prompt" placeholder="Ketik pesan kamu di sini..." 
-                  class="w-full glass rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 h-24 shadow-inner"></textarea>
+    <div class="w-full max-w-md pb-4 space-y-3">
+        <div class="relative">
+            <textarea id="prompt" placeholder="Tuliskan perintah..." 
+                      class="w-full glass rounded-2xl p-4 text-sm text-white focus:outline-none focus:ring-1 focus:ring-cyan-500 h-20 resize-none shadow-inner bg-black/20"></textarea>
+        </div>
         
-        <button onclick="askAI()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-widest text-lg">
-            🚀 TANYA AI SEKARANG
+        <button onclick="askAI()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-widest text-sm flex items-center justify-center gap-2">
+            <span>🚀 JALANKAN PERINTAH</span>
         </button>
     </div>
 
     <script>
-        const API_KEY = "AIzaSyA28Oxr6apgNTzdVkJ34xvEmrsPv5fNGhw";
+        // KUNCI BARU KAMU SUDAH TERPASANG
+        const API_KEY = "AIzaSyBKWKwW6YUNppdGNfY_unMl_1SmvrEDwWk";
 
         async function askAI() {
             const input = document.getElementById('prompt');
             const box = document.getElementById('display');
-            const val = input.value;
+            const val = input.value.trim();
             if(!val) return;
 
-            // Chat User
-            box.innerHTML += `<div class="bg-white/10 p-4 rounded-2xl self-end max-w-[80%] ml-auto text-sm border border-white/5"><b>Kamu:</b> ${val}</div>`;
+            // Render Pesan User
+            box.innerHTML += `<div class="user-card p-4 rounded-2xl self-end max-w-[85%] ml-auto text-sm"><b>USER:</b> ${val}</div>`;
             
             const msg = document.createElement('div');
-            msg.className = "ai-card p-4 rounded-2xl self-start max-w-[90%] text-sm shadow-lg animate-pulse";
-            msg.innerHTML = "<b>AI:</b> Sedang berpikir...";
+            msg.className = "ai-card p-4 rounded-2xl self-start max-w-[90%] text-sm shadow-md animate-pulse";
+            msg.innerHTML = "<b>AI:</b> Mengakses Quantum Core...";
             box.appendChild(msg);
             input.value = "";
             box.scrollTop = box.scrollHeight;
 
-            try {
-                // PAKAI MODEL GEMINI-1.5-FLASH DENGAN JALUR TERBARU
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
-                });
-                const data = await res.json();
-                msg.classList.remove('animate-pulse');
-                
-                if (data.candidates) {
-                    msg.innerHTML = `<b>DRUKANDA AI:</b> ${data.candidates[0].content.parts[0].text}`;
-                } else {
-                    msg.innerHTML = `<span class="text-red-400 italic">Error: Jalur ditolak server. Cek API Studio.</span>`;
+            // List Model untuk Auto-Switch
+            const models = ["gemini-1.5-flash", "gemini-1.5-pro"];
+            let success = false;
+
+            for (let modelName of models) {
+                if (success) break;
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: val }] }] })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.candidates && data.candidates[0].content) {
+                        msg.classList.remove('animate-pulse');
+                        msg.innerHTML = `<b>DRUKANDA AI:</b> ${data.candidates[0].content.parts[0].text}`;
+                        success = true;
+                    }
+                } catch (e) {
+                    console.error("Gagal di model " + modelName);
                 }
-            } catch (e) {
+            }
+
+            if (!success) {
                 msg.classList.remove('animate-pulse');
-                msg.innerHTML = `<span class="text-red-400 italic">Koneksi Gagal.</span>`;
+                msg.innerHTML = `<div class="text-red-400 font-bold underline">ERROR CRITICAL:</div> Jalur ditolak. Pastikan API Key di Google AI Studio sudah "Active" dan tidak ada batasan region.`;
             }
             box.scrollTop = box.scrollHeight;
         }
