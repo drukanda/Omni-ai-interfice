@@ -2,21 +2,67 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>quantum ai dashboard INTERAKTIF</title>
+<title>quantum ai dashboard FUTURISTIK FINAL</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{background:#000;color:#0ff;font-family:Arial;margin:0;}
-header{text-align:center;padding:8px;font-size:18px;border-bottom:1px solid cyan;}
-.container{padding:6px;max-width:100%;margin:auto;display:flex;flex-direction:column;gap:5px;}
-input,select,textarea,button{padding:5px;border:1px solid cyan;background:black;color:#0ff;width:100%;box-sizing:border-box;}
-canvas{width:100%;height:180px;margin-top:5px;}
-#chat,#mediaOutput{border:1px solid cyan;padding:5px;height:140px;overflow:auto;}
-video,audio,img{max-width:100%;display:block;margin-top:5px;}
-footer{text-align:center;font-size:11px;color:#0ff;padding:5px;}
+body{
+  margin:0;
+  font-family:Arial;
+  background: linear-gradient(to bottom, #001f3f, #004080, #001f3f);
+  color:#0ff;
+}
+header{
+  text-align:center;
+  padding:8px;
+  font-size:18px;
+  border-bottom:1px solid cyan;
+}
+.container{
+  padding:6px;
+  max-width:100%;
+  margin:auto;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+canvas{
+  width:100%;
+  height:180px;
+  margin-top:5px;
+}
+#chatContainer{
+  background:rgba(0,0,50,0.6);
+  border:1px solid cyan;
+  border-radius:6px;
+  padding:5px;
+  max-height:200px;
+  overflow:auto;
+}
+#mediaOutput{
+  margin-top:5px;
+}
+textarea,input,button,select{
+  padding:5px;
+  border:1px solid cyan;
+  background:black;
+  color:#0ff;
+  width:100%;
+  box-sizing:border-box;
+  border-radius:4px;
+}
+button{
+  cursor:pointer;
+}
+footer{
+  text-align:center;
+  font-size:11px;
+  color:#0ff;
+  padding:5px;
+}
 </style>
 </head>
 <body>
-<header>⚛ quantum ai dashboard INTERAKTIF</header>
+<header>⚛ quantum ai dashboard FUTURISTIK FINAL</header>
 <div class="container">
 
 <!-- Chart -->
@@ -28,17 +74,13 @@ footer{text-align:center;font-size:11px;color:#0ff;padding:5px;}
 </select>
 <canvas id="chart"></canvas>
 
-<!-- Media -->
-<textarea id="img_prompt" placeholder="Buat gambar / visio"></textarea>
-<button onclick="createImage()">Generate Gambar</button>
-<textarea id="music_prompt" placeholder="Buat musik"></textarea>
-<button onclick="createMusic()">Generate Musik</button>
+<!-- Kotak Jawaban AI + Media -->
+<div id="chatContainer"></div>
 <div id="mediaOutput"></div>
 
-<!-- AI Chat -->
-<textarea id="q" placeholder="Tanya AI teman curhat" onkeydown="if(event.key==='Enter'){event.preventDefault();ask();}"></textarea>
-<button onclick="ask()">Tanya AI</button>
-<div id="chat"></div>
+<!-- Kotak Input -->
+<textarea id="q" placeholder="Tanya AI / Enter → submit" onkeydown="if(event.key==='Enter'){event.preventDefault();ask();}"></textarea>
+<button onclick="ask()">↟ Kirim</button>
 
 </div>
 <footer>by quantum drukanda</footer>
@@ -47,12 +89,13 @@ footer{text-align:center;font-size:11px;color:#0ff;padding:5px;}
 // ======================
 // API KEY ONLINE
 // ======================
-const API_KEY = "  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
+const API_KEY = " AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k "
 
 // ======================
 // Cache & Data
 // ======================
 let chart, marketData=[], chatCache=[], mediaCache={}
+const chatContainer=document.getElementById("chatContainer")
 const mediaOutput=document.getElementById("mediaOutput")
 
 // ======================
@@ -77,44 +120,56 @@ async function loadChart(){
   if(chart) chart.destroy()
   chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"price",data:prices,borderColor:"cyan"}]}})
 }
-loadChart() // auto load saat halaman dibuka
+loadChart()
 
 // ======================
-// AI Chat Offline Mini
+// AI Chat Offline + Online Mini
 // ======================
 function ask(){
   let q=document.getElementById("q").value
   if(!q.trim()) return;
-  let box=document.getElementById("chat")
-  box.innerHTML+="<div>👤 "+q+"</div>"
+  chatContainer.innerHTML+="<div>👤 "+q+"</div>"
   let reply="🤖 AI setia mendengar..."
+  // keyword-based offline cerdas
   if(q.toLowerCase().includes("halo")) reply="🤖 Halo bro! Kabar baik kan?"
   else if(q.toLowerCase().includes("sedih")) reply="🤖 Tetap semangat bro, semua ada jalan keluar 🌟"
+  else if(q.toLowerCase().includes("gimana")) reply="🤖 Tenang bro, semua bisa diatasi 😉"
+  else if(q.toLowerCase().includes("gambar")) reply="🤖 Siap! Generate gambar sesuai permintaanmu."
+  else if(q.toLowerCase().includes("musik")) reply="🤖 Siap! Generate musik sesuai permintaanmu."
   else if(chatCache.length>0) reply="🤖 "+chatCache[chatCache.length-1]
   chatCache.push(reply)
   localStorage.setItem('chatCache',JSON.stringify(chatCache))
-  box.innerHTML+="<div>"+reply+"</div>"
-  box.scrollTop=box.scrollHeight
+
+  // Kotak jawaban timbul / transparan opal
+  let div=document.createElement("div")
+  div.style.background="rgba(0,0,80,0.6)"
+  div.style.border="1px solid cyan"
+  div.style.borderRadius="6px"
+  div.style.padding="5px"
+  div.style.marginBottom="5px"
+  div.innerHTML=reply
+  chatContainer.appendChild(div)
+  chatContainer.scrollTop=chatContainer.scrollHeight
   document.getElementById("q").value=""
+
+  // Auto generate media jika keyword ada
+  if(q.toLowerCase().includes("gambar")) createImage(q)
+  if(q.toLowerCase().includes("musik")) createMusic(q)
 }
 
 // ======================
 // Media Mini Offline
 // ======================
-function createImage(){
-  let prompt=document.getElementById("img_prompt").value
-  if(!prompt.trim()) return;
+function createImage(prompt){
   mediaOutput.innerHTML=""
   let img=new Image()
-  img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
+  img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt||"Gambar AI")
   mediaOutput.appendChild(img)
   mediaCache['img']=img.src
   localStorage.setItem('mediaCache',JSON.stringify(mediaCache))
 }
 
-function createMusic(){
-  let prompt=document.getElementById("music_prompt").value
-  if(!prompt.trim()) return;
+function createMusic(prompt){
   mediaOutput.innerHTML=""
   let a=document.createElement("audio")
   a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
