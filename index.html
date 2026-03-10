@@ -2,135 +2,170 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quantum AI Mobile</title>
-
+<title>Quantum AI Super App LOCKED</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-body{
-background:black;
-color:#00ffff;
-font-family:Arial;
-text-align:center;
-}
-
-h1{
-text-shadow:0 0 10px cyan;
-}
-
-#chat{
-width:95%;
-height:300px;
-background:#111;
-border:1px solid cyan;
-margin:auto;
-overflow:auto;
-padding:10px;
-}
-
-input{
-width:60%;
-padding:10px;
-background:black;
-color:cyan;
-border:1px solid cyan;
-}
-
-button{
-padding:10px;
-background:cyan;
-border:none;
-margin:5px;
-}
-
-img{
-max-width:90%;
-margin-top:10px;
-}
-
+body{background:#000;color:#00ffff;font-family:Arial;margin:0;}
+header{text-align:center;padding:15px;font-size:22px;border-bottom:1px solid cyan;}
+.container{padding:10px;max-width:950px;margin:auto;}
+button{padding:8px;background:cyan;border:none;cursor:pointer;margin:3px 0;}
+input,select{padding:7px;background:black;color:white;border:1px solid cyan;width:70%;}
+canvas{margin-top:15px;}
+#chat{margin-top:15px;border:1px solid cyan;height:250px;overflow:auto;padding:10px;}
 </style>
 </head>
-
 <body>
+<header>⚛ Quantum AI Super App FINAL LOCKED</header>
+<div class="container">
 
-<h1>⚛ Quantum AI Assistant</h1>
+<select id="symbol">
+<option>BTCUSDT</option>
+<option>ETHUSDT</option>
+<option>BNBUSDT</option>
+<option>SOLUSDT</option>
+</select>
+<button onclick="loadChart()">Load Chart</button>
+<button onclick="toggleRefresh()">Auto Refresh</button>
+<button onclick="toggleAnalyst()">Auto Analyst</button>
+<br><br>
 
+<input id="q" placeholder="Tanya AI">
+<button onclick="ask()">Tanya</button><br>
+
+<input id="img_prompt" placeholder="Buat Gambar / Visio">
+<button onclick="createImage()">Generate Image</button><br>
+
+<input id="video_prompt" placeholder="Buat Video / Vufio">
+<button onclick="createVideo()">Generate Video</button><br>
+
+<input id="music_prompt" placeholder="Buat Musik">
+<button onclick="createMusic()">Generate Musik</button>
+
+<canvas id="chart"></canvas>
 <div id="chat"></div>
-
-<br>
-
-<input id="text" placeholder="Tanya sesuatu...">
-<button onclick="send()">Kirim</button>
-
-<br><br>
-
-<input type="file" id="imageUpload" accept="image/*">
-
-<br><br>
-
-<input type="file" id="videoUpload" accept="video/*">
+</div>
 
 <script>
+// ======================
+// MASUKKAN API KEY DISINI
+// ======================
+const API_KEY=" AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k "
+// ======================
 
-const API_KEY = "MASUKKAN_API_KEY_DISINI"
+let chart
+let marketData=[]
+let refreshInterval=null
+let analystInterval=null
 
-async function send(){
-
-let text=document.getElementById("text").value
-let chat=document.getElementById("chat")
-
-chat.innerHTML += "<p>👤 "+text+"</p>"
-
-let response = await fetch(
-"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key="+API_KEY,
-{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-contents:[
-{
-parts:[
-{ text:text }
-]
-}
-]
-})
-}
-)
-
-let data = await response.json()
-
-let jawab = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI tidak menjawab"
-
-chat.innerHTML += "<p>🤖 "+jawab+"</p>"
-
-document.getElementById("text").value=""
-
+function chat(msg){
+let box=document.getElementById("chat")
+box.innerHTML+="<div>"+msg+"</div>"
+box.scrollTop=box.scrollHeight
 }
 
-document.getElementById("imageUpload").onchange=function(e){
+// ======================
+// EMA & RSI & Trend
+// ======================
+function EMA(data,period){let k=2/(period+1);let ema=[data[0]];for(let i=1;i<data.length;i++){ema.push(data[i]*k+ema[i-1]*(1-k))}return ema}
+function RSI(data,period=14){let rsi=[];for(let i=period;i<data.length;i++){let gain=0,loss=0;for(let j=i-period+1;j<=i;j++){let diff=data[j]-data[j-1];if(diff>=0)gain+=diff;else loss-=diff;}let rs=gain/loss;rsi.push(100-(100/(1+rs)))}while(rsi.length<data.length)rsi.unshift(null);return rsi}
+function trend(data){let start=data[0],end=data[data.length-1];if(end>start)return "Bullish 📈";if(end<start)return "Bearish 📉";return "Sideways"}
 
-let file=e.target.files[0]
-
-let url=URL.createObjectURL(file)
-
-let chat=document.getElementById("chat")
-
-chat.innerHTML += "<p>🖼 Gambar diterima AI.</p>"
-chat.innerHTML += "<img src='"+url+"'>"
-
+// ======================
+// LOAD CHART
+// ======================
+async function loadChart(){
+try{
+let symbol=document.getElementById("symbol").value
+let url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`
+let res=await fetch(url)
+let data=await res.json()
+marketData=data
+let labels=[],prices=[]
+data.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]))})
+let ema20=EMA(prices,20)
+let ema50=EMA(prices,50)
+let ctx=document.getElementById("chart").getContext("2d")
+if(chart) chart.destroy()
+chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
+{label:"Price",data:prices,borderColor:"cyan"},
+{label:"EMA20",data:ema20,borderColor:"yellow"},
+{label:"EMA50",data:ema50,borderColor:"orange"}
+]}})
+chat("📊 Trend Market: "+trend(prices.slice(-20)))
+}catch{chat("⚠️ Market API error")}
 }
 
-document.getElementById("videoUpload").onchange=function(e){
+// ======================
+// AUTO REFRESH & ANALYST
+// ======================
+function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;chat("Auto Refresh OFF");return;}refreshInterval=setInterval(loadChart,60000);chat("Auto Refresh ON")}
+function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;chat("Auto Analyst OFF");return;}analystInterval=setInterval(autoAnalysis,120000);chat("Auto Analyst ON")}
+function autoAnalysis(){if(marketData.length==0)return;let prices=marketData.map(c=>parseFloat(c[4]));let rsi=RSI(prices);let last=rsi[rsi.length-1];let insight="";if(last>70)insight="Overbought ⚠️";else if(last<30)insight="Oversold 🔥";else insight="Normal";chat("🤖 Auto Insight → "+trend(prices.slice(-20))+" | "+insight)}
 
-let chat=document.getElementById("chat")
-
-chat.innerHTML += "<p>🎬 Video diterima AI.</p>"
-
+// ======================
+// ASK AI
+// ======================
+async function ask(){
+if(marketData.length==0){chat("Load chart dulu");return}
+let q=document.getElementById("q").value
+chat("👤 "+q)
+chat("⏳ AI menganalisa...")
+let prices=marketData.map(c=>c[4]).slice(-40).join(",")
+let prompt=`Data harga ${document.getElementById("symbol").value}:
+${prices}
+Pertanyaan:
+${q}
+Berikan analisa.`
+try{
+let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,{
+method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})})
+let data=await res.json()
+let ans=data.candidates[0].content.parts[0].text
+chat("🤖 "+ans)
+}catch{chat("⚠️ AI tidak merespon")}
 }
 
+// ======================
+// GENERATE IMAGE
+// ======================
+async function createImage(){
+let prompt=document.getElementById("img_prompt").value
+chat("⏳ AI membuat gambar...")
+try{
+let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-image:generateContent?key=${API_KEY}`,{
+method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})})
+let data=await res.json()
+chat("🖼 Gambar siap! (buka console untuk data Base64)");console.log(data)
+}catch{chat("⚠️ AI gagal buat gambar")}
+}
+
+// ======================
+// GENERATE VIDEO
+// ======================
+async function createVideo(){
+let prompt=document.getElementById("video_prompt").value
+chat("⏳ AI membuat video...")
+try{
+let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-video:generateContent?key=${API_KEY}`,{
+method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})})
+let data=await res.json()
+chat("🎬 Video siap! (buka console untuk data Base64)");console.log(data)
+}catch{chat("⚠️ AI gagal buat video")}
+}
+
+// ======================
+// GENERATE MUSIC
+// ======================
+async function createMusic(){
+let prompt=document.getElementById("music_prompt").value
+chat("⏳ AI membuat musik...")
+try{
+let res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-audio:generateContent?key=${API_KEY}`,{
+method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})})
+let data=await res.json()
+chat("🎵 Musik siap! (buka console untuk data Base64)");console.log(data)
+}catch{chat("⚠️ AI gagal buat musik")}
+}
 </script>
-
 </body>
 </html>
