@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>quantum ai dashboard FUTURISTIK FINAL</title>
+<title>quantum ai dashboard SUPER PRO FINAL</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{
   margin:0;
   font-family:Arial;
-  background: linear-gradient(to bottom, #001f3f, #004080, #001f3f);
+  background: linear-gradient(to bottom, #001f3f, #003366, #001f3f);
   color:#0ff;
 }
 header{
@@ -31,24 +31,22 @@ canvas{
   margin-top:5px;
 }
 #chatContainer{
-  background:rgba(0,0,50,0.6);
-  border:1px solid cyan;
-  border-radius:6px;
-  padding:5px;
-  max-height:200px;
+  max-height:300px;
   overflow:auto;
 }
-#mediaOutput{
-  margin-top:5px;
-}
 textarea,input,button,select{
-  padding:5px;
+  padding:6px;
   border:1px solid cyan;
-  background:black;
+  background:rgba(0,0,50,0.5);
   color:#0ff;
   width:100%;
   box-sizing:border-box;
-  border-radius:4px;
+  border-radius:6px;
+  resize:none;
+}
+textarea{
+  min-height:40px;
+  max-height:120px;
 }
 button{
   cursor:pointer;
@@ -59,10 +57,14 @@ footer{
   color:#0ff;
   padding:5px;
 }
+.media{
+  margin-top:5px;
+  max-width:100%;
+}
 </style>
 </head>
 <body>
-<header>⚛ quantum ai dashboard FUTURISTIK FINAL</header>
+<header>⚛ quantum ai dashboard SUPER PRO FINAL</header>
 <div class="container">
 
 <!-- Chart -->
@@ -74,12 +76,12 @@ footer{
 </select>
 <canvas id="chart"></canvas>
 
-<!-- Kotak Jawaban AI + Media -->
+<!-- Jawaban & Media -->
 <div id="chatContainer"></div>
 <div id="mediaOutput"></div>
 
 <!-- Kotak Input -->
-<textarea id="q" placeholder="Tanya AI / Enter → submit" onkeydown="if(event.key==='Enter'){event.preventDefault();ask();}"></textarea>
+<textarea id="q" placeholder="Tanya AI… Enter → submit" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask();}"></textarea>
 <button onclick="ask()">↟ Kirim</button>
 
 </div>
@@ -89,30 +91,24 @@ footer{
 // ======================
 // API KEY ONLINE
 // ======================
-const API_KEY = " AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k "
+const API_KEY="  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
 
 // ======================
-// Cache & Data
+// Data & Chart
 // ======================
-let chart, marketData=[], chatCache=[], mediaCache={}
+let chart, marketData=[]
 const chatContainer=document.getElementById("chatContainer")
 const mediaOutput=document.getElementById("mediaOutput")
 
-// ======================
-// Chart Auto-Load
-// ======================
 async function loadChart(){
   try{
     let symbol=document.getElementById("symbol").value
-    let url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=50`
-    let res=await fetch(url,{headers:{'X-API-KEY':API_KEY}})
+    let res=await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=50`,{headers:{'X-API-KEY':API_KEY}})
     let data=await res.json()
     marketData=data
-    localStorage.setItem('chartCache',JSON.stringify(data))
   }catch(err){
-    console.log("offline mode")
-    let cached=localStorage.getItem('chartCache')
-    marketData=cached?JSON.parse(cached):[{"time":"12:00","price":10000}]
+    console.log("offline mode, data kosong")
+    marketData=[{"time":0,"price":0}]
   }
   let labels=[],prices=[]
   marketData.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]||c.price))})
@@ -123,60 +119,59 @@ async function loadChart(){
 loadChart()
 
 // ======================
-// AI Chat Offline + Online Mini
+// AI Pro / Jawaban
 // ======================
-function ask(){
+async function ask(){
   let q=document.getElementById("q").value
-  if(!q.trim()) return;
-  chatContainer.innerHTML+="<div>👤 "+q+"</div>"
-  let reply="🤖 AI setia mendengar..."
-  // keyword-based offline cerdas
-  if(q.toLowerCase().includes("halo")) reply="🤖 Halo bro! Kabar baik kan?"
-  else if(q.toLowerCase().includes("sedih")) reply="🤖 Tetap semangat bro, semua ada jalan keluar 🌟"
-  else if(q.toLowerCase().includes("gimana")) reply="🤖 Tenang bro, semua bisa diatasi 😉"
-  else if(q.toLowerCase().includes("gambar")) reply="🤖 Siap! Generate gambar sesuai permintaanmu."
-  else if(q.toLowerCase().includes("musik")) reply="🤖 Siap! Generate musik sesuai permintaanmu."
-  else if(chatCache.length>0) reply="🤖 "+chatCache[chatCache.length-1]
-  chatCache.push(reply)
-  localStorage.setItem('chatCache',JSON.stringify(chatCache))
+  if(!q.trim()) return
+  chatContainer.innerHTML+='<div>👤 '+q+'</div>'
 
-  // Kotak jawaban timbul / transparan opal
-  let div=document.createElement("div")
-  div.style.background="rgba(0,0,80,0.6)"
-  div.style.border="1px solid cyan"
-  div.style.borderRadius="6px"
-  div.style.padding="5px"
-  div.style.marginBottom="5px"
-  div.innerHTML=reply
-  chatContainer.appendChild(div)
+  // fetch jawaban AI online dari API cerdas
+  let reply="🤖 Sedang mengambil jawaban..."
+  try{
+    // Contoh fetch (bro bisa ganti endpoint / backend sendiri)
+    let res=await fetch(`https://api.example.com/ai?key=${API_KEY}&prompt=${encodeURIComponent(q)}`)
+    let data=await res.json()
+    reply=data.answer||"🤖 AI belum ada jawaban"
+  }catch(err){
+    reply="🤖 Gagal mengambil jawaban, coba lagi"
+  }
+
+  chatContainer.innerHTML+='<div>'+reply+'</div>'
   chatContainer.scrollTop=chatContainer.scrollHeight
   document.getElementById("q").value=""
 
-  // Auto generate media jika keyword ada
+  // Media otomatis jika keyword ada
   if(q.toLowerCase().includes("gambar")) createImage(q)
   if(q.toLowerCase().includes("musik")) createMusic(q)
+  if(q.toLowerCase().includes("video")||q.toLowerCase().includes("vufio")) createVideo(q)
 }
 
 // ======================
-// Media Mini Offline
+// Media
 // ======================
 function createImage(prompt){
   mediaOutput.innerHTML=""
   let img=new Image()
-  img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt||"Gambar AI")
+  img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
+  img.className="media"
   mediaOutput.appendChild(img)
-  mediaCache['img']=img.src
-  localStorage.setItem('mediaCache',JSON.stringify(mediaCache))
 }
-
 function createMusic(prompt){
   mediaOutput.innerHTML=""
   let a=document.createElement("audio")
   a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   a.controls=true
+  a.className="media"
   mediaOutput.appendChild(a)
-  mediaCache['audio']=a.src
-  localStorage.setItem('mediaCache',JSON.stringify(mediaCache))
+}
+function createVideo(prompt){
+  mediaOutput.innerHTML=""
+  let v=document.createElement("video")
+  v.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
+  v.controls=true
+  v.className="media"
+  mediaOutput.appendChild(v)
 }
 </script>
 </body>
