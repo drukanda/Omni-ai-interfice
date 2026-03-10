@@ -1,214 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>quantum ai dashboard SUPER PRO FINAL</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Quantum AI Dashboard Editable</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-html, body{
+body {
   margin:0;
-  padding:0;
-  height:100%;
-  font-family:Arial;
-  overflow:hidden;
-}
-body{
-  display:flex;
-  flex-direction:column;
-  background: radial-gradient(circle at 30% 30%, #002244, #000011 80%);
-  color:#0ff;
+  font-family:Arial, sans-serif;
+  background: linear-gradient(to bottom, #001a33 0%, #004466 100%);
+  color: #00ffff;
 }
 header{
   text-align:center;
-  padding:8px;
-  font-size:18px;
+  padding:12px;
+  font-size:20px;
   border-bottom:1px solid cyan;
-  z-index:2;
 }
 .container{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  position:relative;
-}
-#chartContainer{
-  flex:0 0 200px;
-  padding:5px;
-}
-canvas{
-  width:100%;
-  height:100%;
-}
-#chatContainer{
-  flex:1;
-  overflow-y:auto;
-  padding:5px;
-}
-#mediaOutput{
-  padding:5px;
-}
-#inputContainer{
-  padding:5px;
-  background:rgba(0,0,50,0.5);
-  display:flex;
-  flex-direction:column;
-}
-textarea{
-  width:100%;
-  min-height:40px;
-  max-height:120px;
-  resize:none;
-  padding:6px;
-  border:1px solid cyan;
-  border-radius:6px;
-  background:rgba(0,0,50,0.5);
-  color:#0ff;
+  padding:10px;
+  max-width:100%;
+  margin:auto;
 }
 button{
-  margin-top:4px;
-  padding:6px;
-  border:none;
-  border-radius:6px;
+  padding:7px;
   background:cyan;
-  color:black;
+  border:none;
   cursor:pointer;
+  margin:3px 0;
+}
+input,select,textarea{
+  padding:10px;
+  background:black;
+  color:white;
+  border:1px solid cyan;
+  width:95%;
+  font-size:16px;
+  border-radius:6px;
+  margin-bottom:8px;
+}
+canvas,img,video,audio{
+  max-width:100%;
+  height:auto;
+  display:block;
+  margin-top:8px;
+}
+#chat{
+  max-height:60vh;
+  overflow-y:auto;
+  margin-bottom:10px;
+}
+#mediaOutput{
+  margin-top:12px;
 }
 footer{
   text-align:center;
-  font-size:11px;
-  padding:4px;
-  color:#0ff;
-}
-.media{
-  margin-top:5px;
-  max-width:100%;
+  color:#00ffff;
+  font-size:12px;
+  padding:5px;
 }
 </style>
 </head>
 <body>
-
-<header>⚛ quantum ai dashboard SUPER PRO FINAL</header>
-
+<header>⚛ Quantum AI Dashboard Editable</header>
 <div class="container">
 
-  <!-- Chart -->
-  <div id="chartContainer">
-    <select id="symbol">
-      <option>BTCUSDT</option>
-      <option>ETHUSDT</option>
-      <option>BNBUSDT</option>
-      <option>SOLUSDT</option>
-    </select>
-    <canvas id="chart"></canvas>
-  </div>
+<!-- Chart -->
+<select id="symbol">
+<option>BTCUSDT</option>
+<option>ETHUSDT</option>
+<option>BNBUSDT</option>
+<option>SOLUSDT</option>
+</select>
+<button onclick="loadChart()">Load Chart</button>
+<button onclick="toggleRefresh()">Auto Refresh</button>
+<button onclick="toggleAnalyst()">Auto Analyst</button>
+<canvas id="chart"></canvas>
 
-  <!-- Chat + Media -->
-  <div id="chatContainer"></div>
-  <div id="mediaOutput"></div>
+<!-- AI Chat -->
+<input id="q" placeholder="Tanya AI teman curhat">
+<button onclick="ask()">Tanya</button>
+<div id="chat"></div>
 
-  <!-- Kotak Input Paling Bawah -->
-  <div id="inputContainer">
-    <textarea id="q" placeholder="Tanya AI… Enter → submit" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask();}"></textarea>
-    <button onclick="ask()">↟ Kirim</button>
-  </div>
+<!-- Media -->
+<textarea id="img_prompt" placeholder="Buat gambar / visio"></textarea>
+<button onclick="createImage()">Generate Image</button>
+<textarea id="video_prompt" placeholder="Buat video / vufio"></textarea>
+<button onclick="createVideo()">Generate Video</button>
+<textarea id="music_prompt" placeholder="Buat musik"></textarea>
+<button onclick="createMusic()">Generate Musik</button>
+<div id="mediaOutput"></div>
 
 </div>
-
-<footer>by quantum drukanda</footer>
+<footer>by Quantum Drukanda</footer>
 
 <script>
 // ======================
 // API KEY ONLINE
 // ======================
-const API_KEY="  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
+const API_KEY=" AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
 
 // ======================
-// Chart
+// Data & Cache
 // ======================
-let chart, marketData=[]
-const chatContainer=document.getElementById("chatContainer")
+let chart, marketData=[], refreshInterval=null, analystInterval=null, chatCache=[], mediaCache={}
 const mediaOutput=document.getElementById("mediaOutput")
 
+// ======================
+// Chart FULL & MINI
+// ======================
+function EMA(data,period){let k=2/(period+1);let ema=[data[0]];for(let i=1;i<data.length;i++){ema.push(data[i]*k+ema[i-1]*(1-k))}return ema}
+function RSI(data,period=14){let rsi=[];for(let i=period;i<data.length;i++){let gain=0,loss=0;for(let j=i-period+1;j<=i;j++){let diff=data[j]-data[j-1];if(diff>=0)gain+=diff;else loss-=diff;}let rs=gain/loss;rsi.push(100-(100/(1+rs)))}while(rsi.length<data.length)rsi.unshift(null);return rsi}
+function trend(data){let start=data[0],end=data[data.length-1];if(end>start)return "bullish 📈";if(end<start)return "bearish 📉";return "sideways"}
+
+// ======================
+// Load Chart
+// ======================
 async function loadChart(){
   try{
     let symbol=document.getElementById("symbol").value
-    let res=await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=50`)
+    let url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`
+    let res=await fetch(url)
     let data=await res.json()
     marketData=data
+    localStorage.setItem('chartCache',JSON.stringify(data))
   }catch(err){
-    console.log("offline mode, data kosong")
-    marketData=[{"time":0,"price":0}]
+    console.log("offline mode")
+    let cached=localStorage.getItem('chartCache')
+    if(cached) marketData=JSON.parse(cached)
+    else marketData=[{0:0,4:10000}]
   }
   let labels=[],prices=[]
-  marketData.forEach(c=>{
-    labels.push(new Date(c[0]).toLocaleTimeString())
-    prices.push(parseFloat(c[4]||c.price))
-  })
+  marketData.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]))})
+  let ema20=EMA(prices,20)
+  let ema50=EMA(prices,50)
   let ctx=document.getElementById("chart").getContext("2d")
   if(chart) chart.destroy()
-  chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[{label:"price",data:prices,borderColor:"cyan"}]}})
+  chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
+    {label:"price",data:prices,borderColor:"cyan"},
+    {label:"ema20",data:ema20,borderColor:"yellow"},
+    {label:"ema50",data:ema50,borderColor:"orange"}
+  ]}})
 }
-loadChart()
 
 // ======================
-// AI Jawaban
+// Auto Refresh & Analyst
+// ======================
+function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;return;}refreshInterval=setInterval(loadChart,60000)}
+function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;return;}analystInterval=setInterval(autoAnalysis,120000)}
+function autoAnalysis(){if(marketData.length==0)return;let prices=marketData.map(c=>parseFloat(c[4]));let rsi=RSI(prices);let last=rsi[rsi.length-1];let insight="";if(last>70)insight="overbought ⚠️";else if(last<30)insight="oversold 🔥";else insight="normal";console.log("auto insight → "+trend(prices.slice(-20))+" | "+insight)}
+
+// ======================
+// AI Chat Online
 // ======================
 async function ask(){
   let q=document.getElementById("q").value
-  if(!q.trim()) return
-  chatContainer.innerHTML+='<div>👤 '+q+'</div>'
+  let box=document.getElementById("chat")
+  box.innerHTML+="<div>👤 "+q+"</div>"
   let reply="🤖 Sedang mengambil jawaban..."
-  chatContainer.innerHTML+='<div>'+reply+'</div>'
-  chatContainer.scrollTop=chatContainer.scrollHeight
-  document.getElementById("q").value=""
+  box.innerHTML+="<div>"+reply+"</div>"
+  box.scrollTop=box.scrollHeight
 
-  // Contoh fetch AI pro
   try{
-    // Ganti endpoint API bro sendiri
-    let res=await fetch(`https://api.example.com/ai?key=${API_KEY}&prompt=${encodeURIComponent(q)}`)
+    // Contoh sederhana ambil jawaban dari API publik / server (ganti sesuai backend)
+    let res=await fetch(`https://api.example.com/ai?query=${encodeURIComponent(q)}&key=${API_KEY}`)
     let data=await res.json()
-    reply=data.answer||"🤖 AI belum ada jawaban"
-  }catch(err){
-    // fallback cerdas offline
-    reply="🤖 Bro, AI siap bantu menjawab: "+q
+    reply="🤖 "+(data.answer||"Gagal mengambil jawaban, coba lagi")
+  }catch(e){
+    reply="🤖 Gagal mengambil jawaban, coba lagi"
   }
-  chatContainer.innerHTML+='<div>'+reply+'</div>'
-  chatContainer.scrollTop=chatContainer.scrollHeight
-
-  // Media otomatis jika keyword
-  if(q.toLowerCase().includes("gambar")) createImage(q)
-  if(q.toLowerCase().includes("musik")) createMusic(q)
-  if(q.toLowerCase().includes("video")||q.toLowerCase().includes("vufio")) createVideo(q)
+  box.innerHTML+="`<div>"+reply+"</div>`"
+  box.scrollTop=box.scrollHeight
 }
 
 // ======================
-// Media
+// Media Mini
 // ======================
-function createImage(prompt){
-  mediaOutput.innerHTML=""
-  let img=new Image()
-  img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
-  img.className="media"
-  mediaOutput.appendChild(img)
-}
-function createMusic(prompt){
-  mediaOutput.innerHTML=""
-  let a=document.createElement("audio")
-  a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-  a.controls=true
-  a.className="media"
-  mediaOutput.appendChild(a)
-}
-function createVideo(prompt){
-  mediaOutput.innerHTML=""
-  let v=document.createElement("video")
-  v.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
-  v.controls=true
-  v.className="media"
-  mediaOutput.appendChild(v)
-}
+function createImage(){let prompt=document.getElementById("img_prompt").value;mediaOutput.innerHTML="";let img=new Image();img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt);mediaOutput.appendChild(img);mediaCache['img']=img.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
+function createVideo(){let prompt=document.getElementById("video_prompt").value;mediaOutput.innerHTML="";let vid=document.createElement("video");vid.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt);vid.controls=true;mediaOutput.appendChild(vid);mediaCache['video']=vid.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
+function createMusic(){let prompt=document.getElementById("music_prompt").value;mediaOutput.innerHTML="";let a=document.createElement("audio");a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";a.controls=true;mediaOutput.appendChild(a);mediaCache['audio']=a.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
 </script>
-
 </body>
 </html>
