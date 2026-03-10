@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>quantum ai dashboard SUPER FINAL</title>
+<title>quantum ai dashboard INTERAKTIF</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{background:#000;color:#0ff;font-family:Arial;margin:0;}
@@ -16,32 +16,30 @@ footer{text-align:center;font-size:11px;color:#0ff;padding:5px;}
 </style>
 </head>
 <body>
-<header>⚛ quantum ai dashboard SUPER FINAL</header>
+<header>⚛ quantum ai dashboard INTERAKTIF</header>
 <div class="container">
 
-<!-- Symbol selector -->
+<!-- Chart -->
 <select id="symbol">
 <option>BTCUSDT</option>
 <option>ETHUSDT</option>
 <option>BNBUSDT</option>
 <option>SOLUSDT</option>
 </select>
-
-<!-- Chart -->
 <canvas id="chart"></canvas>
-
-<!-- AI Chat -->
-<input id="q" placeholder="Tanya AI teman curhat">
-<button onclick="ask()">Tanya AI</button>
 
 <!-- Media -->
 <textarea id="img_prompt" placeholder="Buat gambar / visio"></textarea>
 <button onclick="createImage()">Generate Gambar</button>
 <textarea id="music_prompt" placeholder="Buat musik"></textarea>
 <button onclick="createMusic()">Generate Musik</button>
-
-<div id="chat"></div>
 <div id="mediaOutput"></div>
+
+<!-- AI Chat -->
+<textarea id="q" placeholder="Tanya AI teman curhat" onkeydown="if(event.key==='Enter'){event.preventDefault();ask();}"></textarea>
+<button onclick="ask()">Tanya AI</button>
+<div id="chat"></div>
+
 </div>
 <footer>by quantum drukanda</footer>
 
@@ -86,6 +84,7 @@ loadChart() // auto load saat halaman dibuka
 // ======================
 function ask(){
   let q=document.getElementById("q").value
+  if(!q.trim()) return;
   let box=document.getElementById("chat")
   box.innerHTML+="<div>👤 "+q+"</div>"
   let reply="🤖 AI setia mendengar..."
@@ -96,6 +95,7 @@ function ask(){
   localStorage.setItem('chatCache',JSON.stringify(chatCache))
   box.innerHTML+="<div>"+reply+"</div>"
   box.scrollTop=box.scrollHeight
+  document.getElementById("q").value=""
 }
 
 // ======================
@@ -103,6 +103,7 @@ function ask(){
 // ======================
 function createImage(){
   let prompt=document.getElementById("img_prompt").value
+  if(!prompt.trim()) return;
   mediaOutput.innerHTML=""
   let img=new Image()
   img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt)
@@ -113,6 +114,7 @@ function createImage(){
 
 function createMusic(){
   let prompt=document.getElementById("music_prompt").value
+  if(!prompt.trim()) return;
   mediaOutput.innerHTML=""
   let a=document.createElement("audio")
   a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
