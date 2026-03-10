@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMNI AI V8.0</title>
+    <style>
+        body { background: #000; color: #00f2ff; font-family: monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        #chat { flex: 1; overflow-y: auto; border: 1px solid #1a1a1a; padding: 10px; margin-bottom: 10px; }
+        .input-box { display: flex; border: 1px solid #00f2ff; }
+        input { flex: 1; background: #000; border: none; color: #fff; padding: 15px; outline: none; font-family: inherit; }
+        .u { color: #fff; margin: 10px 0; }
+        .a { color: #00f2ff; margin-bottom: 20px; border-left: 2px solid #00f2ff; padding-left: 10px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div style="font-size: 10px; margin-bottom: 10px; opacity: 0.7;">NEURAL LINK V8.0 ONLINE</div>
+    <div id="chat"></div>
+    <div class="input-box">
+        <input type="text" id="i" placeholder="INPUT COMMAND..." onkeypress="sh(event)" autocomplete="off">
+    </div>
+
+    <script>
+        async function sh(e) {
+            if (e.key === 'Enter' && e.target.value) {
+                const v = e.target.value;
+                const c = document.getElementById('chat');
+                c.innerHTML += '<div class="u">> ' + v + '</div>';
+                e.target.value = '';
+                c.scrollTop = c.scrollHeight;
+                
+                try {
+                    // KOREKSI: Panggil ke /api/index.js (sesuai folder kamu)
+                    const res = await fetch('/api/index.js', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ p: v })
+                    });
+                    const d = await res.json();
+                    c.innerHTML += '<div class="a">' + (d.r || d.e) + '</div>';
+                } catch (err) {
+                    c.innerHTML += '<div class="a" style="color:red">ERROR: Connection Failed.</div>';
+                }
+                c.scrollTop = c.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
