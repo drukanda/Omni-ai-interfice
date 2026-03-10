@@ -1,36 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OMNI AI</title>
-    <style>
-        body { background: #fff; color: #000; font-family: sans-serif; padding: 20px; }
-        #chat { border: 1px solid #ddd; height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
-        .a { background: #e3f2fd; padding: 8px; margin: 5px 0; border-radius: 5px; }
-        input { width: 100%; padding: 10px; box-sizing: border-box; }
-    </style>
-</head>
-<body>
-    <h3>OMNI AI READY</h3>
-    <div id="chat"></div>
-    <input type="text" id="i" placeholder="Ketik lalu Enter..." onkeypress="sh(event)">
     <script>
         async function sh(e) {
             if (e.key === 'Enter' && e.target.value) {
                 const p = e.target.value;
                 const c = document.getElementById('chat');
-                c.innerHTML += `<div>User: ${p}</div>`;
+                c.innerHTML += `<div class="u">User: ${p}</div>`;
                 e.target.value = '';
-                const res = await fetch('/api', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ pesan: p })
-                });
-                const d = await res.json();
-                c.innerHTML += `<div class="a">AI: ${d.jawaban}</div>`;
+                
+                try {
+                    const res = await fetch('/api', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ pesan: p }) // Mengirim 'pesan'
+                    });
+                    const d = await res.json();
+                    // MEMBACA 'jawaban'
+                    c.innerHTML += `<div class="a">AI: ${d.jawaban || "Gagal baca jawaban"}</div>`;
+                } catch (err) {
+                    c.innerHTML += `<div class="a">AI: Error Koneksi</div>`;
+                }
                 c.scrollTop = c.scrollHeight;
             }
         }
     </script>
-</body>
-</html>
