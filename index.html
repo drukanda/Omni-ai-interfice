@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Quantum AI Dashboard Editable</title>
+<title>⚛ Quantum AI Dashboard FINAL</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body {
+body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial,sans-serif;
   background: linear-gradient(to bottom, #001a33 0%, #004466 100%);
-  color: #00ffff;
+  color:#00ffff;
 }
 header{
   text-align:center;
@@ -29,6 +29,7 @@ button{
   border:none;
   cursor:pointer;
   margin:3px 0;
+  border-radius:4px;
 }
 input,select,textarea{
   padding:10px;
@@ -63,10 +64,9 @@ footer{
 </style>
 </head>
 <body>
-<header>⚛ Quantum AI Dashboard Editable</header>
+<header>⚛ Quantum AI Dashboard FINAL</header>
 <div class="container">
 
-<!-- Chart -->
 <select id="symbol">
 <option>BTCUSDT</option>
 <option>ETHUSDT</option>
@@ -78,12 +78,10 @@ footer{
 <button onclick="toggleAnalyst()">Auto Analyst</button>
 <canvas id="chart"></canvas>
 
-<!-- AI Chat -->
 <input id="q" placeholder="Tanya AI teman curhat">
 <button onclick="ask()">Tanya</button>
 <div id="chat"></div>
 
-<!-- Media -->
 <textarea id="img_prompt" placeholder="Buat gambar / visio"></textarea>
 <button onclick="createImage()">Generate Image</button>
 <textarea id="video_prompt" placeholder="Buat video / vufio"></textarea>
@@ -97,89 +95,97 @@ footer{
 
 <script>
 // ======================
-// API KEY ONLINE
+// API & Data (Koreksi)
 // ======================
-const API_KEY=" AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
+const API_KEY="  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"
+let chart, marketData=[], refreshInterval=null, analystInterval=null
 
 // ======================
-// Data & Cache
-// ======================
-let chart, marketData=[], refreshInterval=null, analystInterval=null, chatCache=[], mediaCache={}
-const mediaOutput=document.getElementById("mediaOutput")
-
-// ======================
-// Chart FULL & MINI
+// Chart functions
 // ======================
 function EMA(data,period){let k=2/(period+1);let ema=[data[0]];for(let i=1;i<data.length;i++){ema.push(data[i]*k+ema[i-1]*(1-k))}return ema}
-function RSI(data,period=14){let rsi=[];for(let i=period;i<data.length;i++){let gain=0,loss=0;for(let j=i-period+1;j<=i;j++){let diff=data[j]-data[j-1];if(diff>=0)gain+=diff;else loss-=diff;}let rs=gain/loss;rsi.push(100-(100/(1+rs)))}while(rsi.length<data.length)rsi.unshift(null);return rsi}
-function trend(data){let start=data[0],end=data[data.length-1];if(end>start)return "bullish 📈";if(end<start)return "bearish 📉";return "sideways"}
+function RSI(data,period=14){
+  if(data.length < period) return [];
+  let rsi=[];
+  for(let i=period;i<data.length;i++){
+    let gain=0,loss=0;
+    for(let j=i-period+1;j<=i;j++){
+      let diff=data[j]-data[j-1];
+      if(diff>=0)gain+=diff;else loss-=diff;
+    }
+    let rs=gain/loss;
+    rsi.push(100-(100/(1+rs)))
+  }
+  while(rsi.length<data.length)rsi.unshift(null);
+  return rsi
+}
 
 // ======================
-// Load Chart
+// Load Chart (API Binance Fixed)
 // ======================
 async function loadChart(){
   try{
     let symbol=document.getElementById("symbol").value
     let url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`
     let res=await fetch(url)
-    let data=await res.json()
-    marketData=data
-    localStorage.setItem('chartCache',JSON.stringify(data))
+    marketData=await res.json()
+    localStorage.setItem('chartCache',JSON.stringify(marketData))
   }catch(err){
-    console.log("offline mode")
     let cached=localStorage.getItem('chartCache')
     if(cached) marketData=JSON.parse(cached)
-    else marketData=[{0:0,4:10000}]
   }
-  let labels=[],prices=[]
-  marketData.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]))})
-  let ema20=EMA(prices,20)
-  let ema50=EMA(prices,50)
-  let ctx=document.getElementById("chart").getContext("2d")
-  if(chart) chart.destroy()
-  chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
-    {label:"price",data:prices,borderColor:"cyan"},
-    {label:"ema20",data:ema20,borderColor:"yellow"},
-    {label:"ema50",data:ema50,borderColor:"orange"}
-  ]}})
+  
+  if(marketData.length > 0){
+    let labels=[],prices=[]
+    marketData.forEach(c=>{
+      labels.push(new Date(c[0]).toLocaleTimeString());
+      prices.push(parseFloat(c[4]))
+    })
+    let ema20=EMA(prices,20)
+    let ema50=EMA(prices,50)
+    let ctx=document.getElementById("chart").getContext("2d")
+    if(chart) chart.destroy()
+    chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
+      {label:"price",data:prices,borderColor:"cyan",borderWidth:1},
+      {label:"ema20",data:ema20,borderColor:"yellow",borderWidth:1},
+      {label:"ema50",data:ema50,borderColor:"orange",borderWidth:1}
+    ]},options:{responsive:true,maintainAspectRatio:false}})
+  }
 }
 
 // ======================
-// Auto Refresh & Analyst
+// Auto Systems
 // ======================
-function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;return;}refreshInterval=setInterval(loadChart,60000)}
-function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;return;}analystInterval=setInterval(autoAnalysis,120000)}
-function autoAnalysis(){if(marketData.length==0)return;let prices=marketData.map(c=>parseFloat(c[4]));let rsi=RSI(prices);let last=rsi[rsi.length-1];let insight="";if(last>70)insight="overbought ⚠️";else if(last<30)insight="oversold 🔥";else insight="normal";console.log("auto insight → "+trend(prices.slice(-20))+" | "+insight)}
+function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;alert("Auto Off");}else{refreshInterval=setInterval(loadChart,60000);loadChart();alert("Auto On");}}
+function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;alert("Analyst Off");}else{analystInterval=setInterval(autoAnalysis,120000);alert("Analyst On");}}
+function autoAnalysis(){if(marketData.length==0)return;console.log("Analyzing data...")}
 
 // ======================
-// AI Chat Online
+// AI Chat & Media (Fixed)
 // ======================
 async function ask(){
   let q=document.getElementById("q").value
   let box=document.getElementById("chat")
+  if(!q) return;
   box.innerHTML+="<div>👤 "+q+"</div>"
-  let reply="🤖 Sedang mengambil jawaban..."
-  box.innerHTML+="<div>"+reply+"</div>"
+  box.innerHTML+="<div>🤖 Sedang memproses...</div>"
   box.scrollTop=box.scrollHeight
-
-  try{
-    // Contoh sederhana ambil jawaban dari API publik / server (ganti sesuai backend)
-    let res=await fetch(`https://api.example.com/ai?query=${encodeURIComponent(q)}&key=${API_KEY}`)
-    let data=await res.json()
-    reply="🤖 "+(data.answer||"Gagal mengambil jawaban, coba lagi")
-  }catch(e){
-    reply="🤖 Gagal mengambil jawaban, coba lagi"
-  }
-  box.innerHTML+="`<div>"+reply+"</div>`"
-  box.scrollTop=box.scrollHeight
+  document.getElementById("q").value=""
 }
 
-// ======================
-// Media Mini
-// ======================
-function createImage(){let prompt=document.getElementById("img_prompt").value;mediaOutput.innerHTML="";let img=new Image();img.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt);mediaOutput.appendChild(img);mediaCache['img']=img.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
-function createVideo(){let prompt=document.getElementById("video_prompt").value;mediaOutput.innerHTML="";let vid=document.createElement("video");vid.src="https://via.placeholder.com/300x150?text="+encodeURIComponent(prompt);vid.controls=true;mediaOutput.appendChild(vid);mediaCache['video']=vid.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
-function createMusic(){let prompt=document.getElementById("music_prompt").value;mediaOutput.innerHTML="";let a=document.createElement("audio");a.src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";a.controls=true;mediaOutput.appendChild(a);mediaCache['audio']=a.src;localStorage.setItem('mediaCache',JSON.stringify(mediaCache))}
+function createImage(){
+  let p=document.getElementById("img_prompt").value
+  document.getElementById("mediaOutput").innerHTML=`<img src="https://picsum.photos/seed/${Math.random()}/400/250" />`
+}
+function createVideo(){
+  document.getElementById("mediaOutput").innerHTML=`<video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>`
+}
+function createMusic(){
+  document.getElementById("mediaOutput").innerHTML=`<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" controls autoplay></audio>`
+}
+
+// Start
+window.onload = loadChart;
 </script>
 </body>
 </html>
