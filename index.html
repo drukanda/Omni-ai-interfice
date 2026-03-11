@@ -13,33 +13,37 @@ body{
 }
 header{ text-align:center; padding:10px; border-bottom:1px solid cyan; font-size:18px; flex-shrink: 0; }
 #scrollArea{
-  flex: 1; overflow-y: auto; padding: 15px;
+  flex: 1; overflow-y: auto; padding: 10px;
   display: flex; flex-direction: column; scroll-behavior: smooth;
 }
-.user-log { font-size: 14px; color: #0ff; margin-top: 15px; border-left: 2px solid cyan; padding-left: 10px; }
+.user-log { font-size: 14px; color: #0ff; margin-top: 10px; border-left: 2px solid cyan; padding-left: 10px; }
 .sys-log { font-size: 14px; color: yellow; margin-bottom: 5px; font-weight: bold; }
-.ai-msg { font-size: 16px; color: #fff; line-height: 1.5; margin-bottom: 12px; }
+.ai-msg { font-size: 16px; color: #fff; line-height: 1.5; margin-bottom: 10px; }
 canvas, img, video, audio {
   max-width:100%; border-radius: 8px; border: 1px solid cyan; margin-top: 10px; flex-shrink: 0;
 }
 .input-area {
   padding: 10px; background: rgba(0,0,0,0.8); border-top: 1px solid cyan; flex-shrink: 0;
+  display: flex; flex-direction: column;
 }
-input, select {
-  padding:12px; background:#000; color:#fff; border:1px solid cyan;
+input, select, button {
+  padding:10px; background:#000; color:#fff; border:1px solid cyan;
   width:100%; font-size:16px; border-radius:5px; margin-bottom:5px; box-sizing: border-box; outline: none;
 }
 button {
-  padding:12px; background:cyan; border:none; border-radius:5px;
-  font-weight:bold; color:#000; cursor:pointer; width: 100%; font-size: 16px; margin-bottom: 5px;
+  font-weight:bold; color:#000; cursor:pointer; background:cyan;
 }
-footer { text-align:center; font-size:10px; padding:5px; opacity: 0.5; }
+footer { text-align:center; font-size:10px; padding:5px; opacity:0.5; }
+@media(max-width:600px){
+  .user-log, .sys-log, .ai-msg { font-size: 14px; }
+  input, select, button { font-size: 14px; }
+}
 </style>
 </head>
 <body>
 <header>⚛ QUANTUM DRUKANDA OS</header>
 <div id="scrollArea">
-  <div style="height: 180px; min-height: 180px; flex-shrink: 0;"><canvas id="chart"></canvas></div>
+  <div style="height:180px; min-height:180px; flex-shrink:0;"><canvas id="chart"></canvas></div>
   <div id="chat"></div>
 </div>
 <div class="input-area">
@@ -47,9 +51,8 @@ footer { text-align:center; font-size:10px; padding:5px; opacity: 0.5; }
     <option>BTCUSDT</option><option>ETHUSDT</option>
   </select>
   <button onclick="loadChart()">⚡ SYNC MARKET MATRIX</button>
-  
-  <input id="q" placeholder="Contoh: 'Vidio kucing', 'Gambar bebek', atau 'Lagu soneta'..." onkeydown="if(event.key==='Enter') ask()">
-  <button onclick="ask()" style="background:#0ff">⚡ EXECUTE QUANTUM</button>
+  <input id="q" placeholder="Contoh: 'Vidio kucing', 'Gambar bebek', 'Lagu soneta', atau chat biasa..." onkeydown="if(event.key==='Enter') ask()">
+  <button onclick="ask()">⚡ EXECUTE QUANTUM</button>
 </div>
 <footer>Author: Dadan Sukaryat Putra</footer>
 <script>
@@ -101,29 +104,31 @@ async function ask() {
     let low = q.toLowerCase();
     let sysLog = document.getElementById(id);
 
-    // Video
     if (low.includes("video") || low.includes("vidio") || low.includes("visio")) {
       sysLog.innerHTML = "🤖 Quantum: VIDEO STREAM SYNCED.";
       box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Menampilkan Video sesuai perintah "${q}"</div>
                                            <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>`);
     } 
-    // Gambar / foto
     else if (low.includes("gambar") || low.includes("poto") || low.includes("foto")) {
       sysLog.innerHTML = "🤖 Quantum: VISUALIZATION SUCCESS.";
       const imgSeed = encodeURIComponent(low.substring(0,20));
       box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Gambar hasil observasi "${q}"</div>
                                            <img src="https://picsum.photos/seed/${imgSeed}/400/250" />`);
     } 
-    // Musik / lagu
     else if (low.includes("lagu") || low.includes("musik") || low.includes("soneta")) {
       sysLog.innerHTML = "🤖 Quantum: AUDIO STREAM SYNCED.";
       box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Memutar audio sesuai perintah "${q}"</div>
                                            <audio src="https://www.w3schools.com/html/horse.mp3" controls autoplay></audio>`);
     } 
-    // Default text
     else {
-      sysLog.innerHTML = "🤖 Quantum: ANALYSIS COMPLETE.";
-      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Respon: "${q}" telah disinkronkan ke dalam Matrix.</div>`);
+      sysLog.innerHTML = "🤖 Quantum: RESPONSE GENERATED.";
+      const replies = [
+        "Halo bro! Gue sehat 😎, lo gimana?",
+        "Apa kabar bro? Semoga hari ini lancar!",
+        "Bro, semua oke nih. Lo gimana?"
+      ];
+      const reply = replies[Math.floor(Math.random()*replies.length)];
+      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">${reply}</div>`);
     }
 
     box.lastElementChild.scrollIntoView({ behavior: 'smooth' });
