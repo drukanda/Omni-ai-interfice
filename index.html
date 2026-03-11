@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>⚛ Quantum Drukanda OS v800++</title>
+<title>⚛ Quantum Drukanda OS v800+++</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#001a33;color:#0ff;display:flex;flex-direction:column;height:100vh;}
@@ -22,7 +22,7 @@ footer{text-align:center;font-size:12px;padding:5px;opacity:0.5;text-shadow:0 0 
 </style>
 </head>
 <body>
-<header>⚛ QUANTUM DRUKANDA OS v800++</header>
+<header>⚛ QUANTUM DRUKANDA OS v800+++</header>
 <div id="scrollArea">
   <div style="height:180px;min-height:180px;flex-shrink:0;"><canvas id="chart"></canvas></div>
   <div id="chat"></div>
@@ -39,8 +39,8 @@ footer{text-align:center;font-size:12px;padding:5px;opacity:0.5;text-shadow:0 0 
 <footer>Author: Dadan Sukaryat Putra</footer>
 
 <script>
-const API_KEY="AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTisk";
-const OPENAI_KEY="MASUKIN_OPENAI_KEY_LO"; // untuk jawaban cerdas
+const API_KEY="MASUKIN_TOKEN_BRO_DISINI";
+const OPENAI_KEY="AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTisk"; // untuk jawaban cerdas
 let chart,marketData=[];
 
 // Chart Binance
@@ -70,7 +70,7 @@ async function ask(){
 
   box.insertAdjacentHTML('beforeend',`<div class="user-log">> ${q}</div>`);
   const id="sys-"+Date.now();
-  box.insertAdjacentHTML('beforeend',`<div id="${id}" class="sys-log">[SYS]: ANALYZING...</div>`);
+  box.insertAdjacentHTML('beforeend',`<div id="${id}" class="sys-log">[SYS]: Quantum sedang berpikir...</div>`);
   input.value="";
   scrollArea.scrollTop=scrollArea.scrollHeight;
 
@@ -99,9 +99,11 @@ async function ask(){
       speechSynthesis.speak(utter);
       box.insertAdjacentHTML('beforeend',`<div class="ai-msg">Output: Memutar voice sesuai perintah "${q}"</div>`);
     }
-    // Jawaban cerdas via OpenAI API
+    // Jawaban cerdas via OpenAI API + fallback
     else{
       sysLog.innerHTML="🤖 Quantum: RESPONSE GENERATED.";
+      let fallback="Halo bro! Quantum sedang memproses pertanyaanmu...";
+      box.insertAdjacentHTML('beforeend',`<div class="ai-msg">${fallback}</div>`);
       try{
         const resp=await fetch("https://api.openai.com/v1/chat/completions",{
           method:"POST",
@@ -111,19 +113,24 @@ async function ask(){
           },
           body:JSON.stringify({
             model:"gpt-3.5-turbo",
-            messages:[{role:"user", content:q}]
+            messages:[{role:"user",content:q}]
           })
         });
         const data=await resp.json();
-        const answer=data.choices[0].message.content;
-        box.insertAdjacentHTML('beforeend',`<div class="ai-msg">${answer}</div>`);
+        if(data.choices && data.choices[0] && data.choices[0].message){
+          const answer=data.choices[0].message.content;
+          box.lastElementChild.innerHTML=answer;
+        } else {
+          box.lastElementChild.innerHTML="🤖 Quantum: Jawaban API gagal, gunakan fallback instan.";
+        }
       }catch(e){
-        box.insertAdjacentHTML('beforeend',`<div class="ai-msg">🤖 Quantum: Jawaban gagal, coba lagi. Error: ${e}</div>`);
+        box.lastElementChild.innerHTML="🤖 Quantum: Jawaban API gagal, gunakan fallback instan.";
+        console.log("API ERROR:",e);
       }
     }
 
     box.lastElementChild.scrollIntoView({behavior:'smooth'});
-  },500);
+  },100); // timeout lebih kecil untuk instan
 }
 
 window.onload=loadChart;
