@@ -7,87 +7,48 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{
-  margin:0;
-  font-family:Arial,sans-serif;
+  margin:0; font-family:Arial,sans-serif;
   background: linear-gradient(to bottom, #001a33 0%, #004466 100%);
-  color:#00ffff;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+  color:#00ffff; display: flex; flex-direction: column; height: 100vh;
 }
-header{
-  text-align:center;
-  padding:12px;
-  font-size:20px;
-  border-bottom:1px solid cyan;
-}
-/* CONTAINER SCROLLABLE (JAWABAN DI ATAS) */
+header{ text-align:center; padding:12px; font-size:20px; border-bottom:1px solid cyan; flex-shrink: 0; }
+
+/* CONTAINER SCROLLABLE (TERMINAL STYLE) */
 .container{
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
+  flex: 1; overflow-y: auto; padding: 10px;
+  display: flex; flex-direction: column;
 }
 button{
-  padding:7px;
-  background:cyan;
-  border:none;
-  cursor:pointer;
-  margin:3px 0;
-  border-radius: 4px;
+  padding:7px; background:cyan; border:none; cursor:pointer;
+  margin:3px 0; border-radius: 4px; font-weight: bold; color: black;
 }
 input,select,textarea{
-  padding:10px;
-  background:black;
-  color:white;
-  border:1px solid cyan;
-  width:95%;
-  font-size:16px;
-  border-radius:6px;
-  margin-bottom:8px;
+  padding:12px; background:black; color:white; border:1px solid cyan;
+  width:95%; font-size:16px; border-radius:6px; margin-bottom:8px;
 }
 canvas,img,video,audio{
-  max-width:100%;
-  height:auto;
-  display:block;
-  margin-top:8px;
+  max-width:100%; height:auto; display:block; margin-top:8px; border-radius: 8px; border: 1px solid rgba(0,255,255,0.3);
 }
-#chat{
-  margin-bottom:10px;
-}
-#mediaOutput{
-  margin-top:12px;
-}
-/* AREA INPUT (DI BAWAH) */
+#chat { margin-bottom: 20px; }
+
+/* AREA INPUT (DI BAWAH - FIX POSISI) */
 .input-area {
-  padding: 10px;
-  background: rgba(0,0,0,0.5);
-  border-top: 1px solid cyan;
+  padding: 10px; background: rgba(0,0,0,0.8); border-top: 1px solid cyan; flex-shrink: 0;
 }
-footer{
-  text-align:center;
-  color:#00ffff;
-  font-size:12px;
-  padding:5px;
-}
+footer{ text-align:center; color:#00ffff; font-size:12px; padding:5px; }
 </style>
 </head>
 <body>
 <header>⚛ Quantum AI Dashboard FINAL</header>
 
 <div class="container" id="scrollArea">
+  <div style="height: 200px; flex-shrink: 0;"><canvas id="chart"></canvas></div>
   <div id="chat"></div>
-  <div id="mediaOutput"></div>
-  <canvas id="chart"></canvas>
 </div>
 
 <div class="input-area">
   <select id="symbol">
-    <option>BTCUSDT</option>
-    <option>ETHUSDT</option>
-    <option>BNBUSDT</option>
-    <option>SOLUSDT</option>
+    <option>BTCUSDT</option><option>ETHUSDT</option><option>BNBUSDT</option><option>SOLUSDT</option>
   </select>
   <div style="display: flex; gap: 5px;">
     <button onclick="loadChart()" style="flex:1">Load Chart</button>
@@ -95,22 +56,15 @@ footer{
     <button onclick="toggleAnalyst()" style="flex:1">Auto Analyst</button>
   </div>
 
-  <input id="q" placeholder="Tanya AI teman curhat">
-  <button onclick="ask()" style="width:100%">Tanya</button>
-
-  <textarea id="img_prompt" placeholder="Buat gambar / visio" style="height:40px;"></textarea>
-  <button onclick="createImage()" style="width:100%">Generate Image</button>
-  <textarea id="video_prompt" placeholder="Buat video / vufio" style="height:40px;"></textarea>
-  <button onclick="createVideo()" style="width:100%">Generate Video</button>
-  <textarea id="music_prompt" placeholder="Buat musik" style="height:40px;"></textarea>
-  <button onclick="createMusic()" style="width:100%">Generate Musik</button>
+  <input id="q" placeholder="Ketik perintah (Gambar, Video, Musik, atau Pertanyaan)" onkeydown="if(event.key==='Enter') ask()">
+  <button onclick="ask()" style="width:100%; background: #00ffff;">⚡ EKSEKUSI QUANTUM</button>
 </div>
 
 <footer>by Quantum Drukanda</footer>
 
 <script>
 // ======================
-// FORMAT ASLI BRO (TIDAK DIUBAH)
+// FORMAT ASLI BRO (LOCKED)
 // ======================
 const API_KEY=" AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k "
 let chart, marketData=[], refreshInterval=null, analystInterval=null
@@ -119,53 +73,74 @@ function EMA(data,period){let k=2/(period+1);let ema=[data[0]];for(let i=1;i<dat
 function RSI(data,period=14){let rsi=[];for(let i=period;i<data.length;i++){let gain=0,loss=0;for(let j=i-period+1;j<=i;j++){let diff=data[j]-data[j-1];if(diff>=0)gain+=diff;else loss-=diff;}let rs=gain/loss;rsi.push(100-(100/(1+rs)))}while(rsi.length<data.length)rsi.unshift(null);return rsi}
 function trend(data){let start=data[0],end=data[data.length-1];if(end>start)return "bullish 📈";if(end<start)return "bearish 📉";return "sideways"}
 
-// API CHART (FORMAT ASLI BALIK)
+// API CHART ONLINE (LOCKED)
 async function loadChart(){
   try{
     let symbol=document.getElementById("symbol").value
     let url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=100`
     let res=await fetch(url)
-    let data=await res.json()
-    marketData=data
-    localStorage.setItem('chartCache',JSON.stringify(data))
-  }catch(err){
-    let cached=localStorage.getItem('chartCache')
-    if(cached) marketData=JSON.parse(cached)
+    marketData=await res.json()
+  }catch(err){ console.log("Offline Mode"); }
+  
+  if(marketData.length > 0){
+    let labels=[],prices=[]
+    marketData.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]))})
+    let ema20=EMA(prices,20); let ema50=EMA(prices,50)
+    let ctx=document.getElementById("chart").getContext("2d")
+    if(chart) chart.destroy()
+    chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
+      {label:"price",data:prices,borderColor:"cyan",borderWidth:1.5,pointRadius:0},
+      {label:"ema20",data:ema20,borderColor:"yellow",borderWidth:1,pointRadius:0},
+      {label:"ema50",data:ema50,borderColor:"orange",borderWidth:1,pointRadius:0}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}} )
   }
-  let labels=[],prices=[]
-  marketData.forEach(c=>{labels.push(new Date(c[0]).toLocaleTimeString());prices.push(parseFloat(c[4]))})
-  let ema20=EMA(prices,20); let ema50=EMA(prices,50)
-  let ctx=document.getElementById("chart").getContext("2d")
-  if(chart) chart.destroy()
-  chart=new Chart(ctx,{type:"line",data:{labels:labels,datasets:[
-    {label:"price",data:prices,borderColor:"cyan"},
-    {label:"ema20",data:ema20,borderColor:"yellow"},
-    {label:"ema50",data:ema50,borderColor:"orange"}
-  ]}})
 }
 
-function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;alert("Refresh Off");}else{refreshInterval=setInterval(loadChart,60000);alert("Refresh On");}}
-function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;alert("Analyst Off");}else{analystInterval=setInterval(autoAnalysis,120000);alert("Analyst On");}}
-function autoAnalysis(){if(marketData.length==0)return;console.log("Analisis jalan...")}
+function toggleRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;alert("Off");}else{refreshInterval=setInterval(loadChart,60000);alert("On");}}
+function toggleAnalyst(){if(analystInterval){clearInterval(analystInterval);analystInterval=null;alert("Off");}else{analystInterval=setInterval(autoAnalysis,120000);alert("On");}}
+function autoAnalysis(){if(marketData.length==0)return;console.log("Quantum Analytics Running...")}
 
-// AI CHAT & MEDIA (TATA LETAK DIPERBAIKI)
+// ======================
+// LOGIKA CERDAS & TURBO (GABUNGAN)
+// ======================
 async function ask(){
-  let q=document.getElementById("q").value
-  let box=document.getElementById("chat")
+  let q=document.getElementById("q").value;
+  let box=document.getElementById("chat");
+  let scrollArea = document.getElementById("scrollArea");
   if(!q) return;
-  box.innerHTML = "<div>👤 "+q+"</div>" + "<div>🤖 Memproses kausalitas...</div>" + box.innerHTML;
-  document.getElementById("q").value=""
-}
 
-function createImage(){
-  let p=document.getElementById("img_prompt").value
-  document.getElementById("mediaOutput").innerHTML = `<img src="https://picsum.photos/seed/${Math.random()}/400/250" />` + document.getElementById("mediaOutput").innerHTML;
-}
-function createVideo(){
-  document.getElementById("mediaOutput").innerHTML = `<video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>` + document.getElementById("mediaOutput").innerHTML;
-}
-function createMusic(){
-  document.getElementById("mediaOutput").innerHTML = `<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" controls autoplay></audio>` + document.getElementById("mediaOutput").innerHTML;
+  // Respons Instan (Anti-Lola)
+  box.innerHTML += `<div style="color:#0ff; margin-top:15px; border-left: 2px solid cyan; padding-left:10px;">👤 Executing: ${q}</div>`;
+  let loadId = "sys-" + Date.now();
+  box.innerHTML += `<div id="${loadId}" style="color:yellow; font-family:monospace;">[SYS]: Processing Quantum Data...</div>`;
+  
+  scrollArea.scrollTop = scrollArea.scrollHeight;
+  document.getElementById("q").value="";
+
+  // Proses Cepat
+  setTimeout(() => {
+    let low = q.toLowerCase();
+    let sysLog = document.getElementById(loadId);
+    
+    if(low.includes("gambar") || low.includes("poto") || low.includes("foto")){
+      sysLog.innerHTML = "🤖 Quantum: Visualization Success.";
+      box.innerHTML += `<img src="https://picsum.photos/seed/${Math.random()}/400/250" />`;
+    } else if(low.includes("video") || low.includes("vufio")){
+      sysLog.innerHTML = "🤖 Quantum: Stream Synchronized.";
+      box.innerHTML += `<video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>`;
+    } else if(low.includes("musik") || low.includes("voice") || low.includes("suara")){
+      sysLog.innerHTML = "🤖 Quantum: Audio Frequency Active.";
+      box.innerHTML += `<audio src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" controls autoplay></audio>`;
+    } else if(low.includes("chart") || low.includes("harga")){
+      sysLog.innerHTML = "🤖 Quantum: Updating Market Graph...";
+      loadChart();
+    } else {
+      sysLog.innerHTML = "🤖 Quantum: Analysis Complete. Causality Matrix Updated.";
+    }
+    
+    // Auto-Scroll ke jawaban terbaru (Terminal style)
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+  }, 400);
 }
 
 window.onload = loadChart;
