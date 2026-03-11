@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>⚛ Quantum Drukanda OS v800+</title>
+<title>⚛ Quantum Drukanda OS v800++</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#001a33;color:#0ff;display:flex;flex-direction:column;height:100vh;}
@@ -12,7 +12,7 @@ header{text-align:center;padding:12px;border-bottom:1px solid cyan;font-size:16p
 .user-log{font-size:16px;color:#0ff;margin-top:10px;border-left:2px solid cyan;padding-left:10px;word-break:break-word;text-shadow:0 0 3px cyan;}
 .sys-log{font-size:16px;color:yellow;margin-bottom:5px;font-weight:bold;text-shadow:0 0 3px yellow;}
 .ai-msg{font-size:16px;color:#fff;line-height:1.5;margin-bottom:10px;word-break:break-word;text-shadow:0 0 4px #0ff;}
-canvas,img,video,audio{max-width:100%;border-radius:8px;border:1px solid cyan;margin-top:10px;flex-shrink:0;box-shadow:0 0 10px cyan;}
+canvas,img,video,audio,iframe{max-width:100%;border-radius:8px;border:1px solid cyan;margin-top:10px;flex-shrink:0;box-shadow:0 0 10px cyan;}
 .input-area{padding:10px;background:rgba(0,0,0,0.85);border-top:1px solid cyan;flex-shrink:0;display:flex;flex-direction:column;}
 input,select,button{padding:12px;background:#000;color:#fff;border:1px solid cyan;width:100%;font-size:16px;border-radius:5px;margin-bottom:5px;box-sizing:border-box;outline:none;text-shadow:0 0 3px #0ff;}
 button{font-weight:bold;color:#000;cursor:pointer;background:cyan;box-shadow:0 0 10px cyan;transition:0.3s;}
@@ -22,7 +22,7 @@ footer{text-align:center;font-size:12px;padding:5px;opacity:0.5;text-shadow:0 0 
 </style>
 </head>
 <body>
-<header>⚛ QUANTUM DRUKANDA OS v800+</header>
+<header>⚛ QUANTUM DRUKANDA OS v800++</header>
 <div id="scrollArea">
   <div style="height:180px;min-height:180px;flex-shrink:0;"><canvas id="chart"></canvas></div>
   <div id="chat"></div>
@@ -33,13 +33,14 @@ footer{text-align:center;font-size:12px;padding:5px;opacity:0.5;text-shadow:0 0 
     <option>ETHUSDT</option>
   </select>
   <button onclick="loadChart()">⚡ SYNC MARKET MATRIX</button>
-  <input id="q" placeholder="Contoh: 'Gambar kucing', 'Video kucing', 'Voice Halo', atau chat biasa..." onkeydown="if(event.key==='Enter') ask()">
+  <input id="q" placeholder="Contoh: 'Gambar kucing', 'Video kucing', 'Voice Halo', atau chat bebas..." onkeydown="if(event.key==='Enter') ask()">
   <button onclick="ask()">⚡ EXECUTE QUANTUM</button>
 </div>
 <footer>Author: Dadan Sukaryat Putra</footer>
 
 <script>
-const API_KEY="  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTisk";
+const API_KEY="AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTisk";
+const OPENAI_KEY="MASUKIN_OPENAI_KEY_LO"; // untuk jawaban cerdas
 let chart,marketData=[];
 
 // Chart Binance
@@ -66,7 +67,7 @@ async function ask(){
   const scrollArea=document.getElementById("scrollArea");
   const q=input.value.trim();
   if(!q) return;
-  
+
   box.insertAdjacentHTML('beforeend',`<div class="user-log">> ${q}</div>`);
   const id="sys-"+Date.now();
   box.insertAdjacentHTML('beforeend',`<div id="${id}" class="sys-log">[SYS]: ANALYZING...</div>`);
@@ -77,36 +78,48 @@ async function ask(){
     let low=q.toLowerCase();
     let sysLog=document.getElementById(id);
 
-    // Gambar real dari Unsplash API
+    // Gambar real
     if(low.includes("gambar")||low.includes("poto")||low.includes("foto")){
       sysLog.innerHTML="🤖 Quantum: VISUALIZATION SUCCESS.";
       const keyword=encodeURIComponent(low.replace(/^(gambar|foto|poto)\s*/i,''));
       const imgUrl=`https://source.unsplash.com/400x250/?${keyword}`;
       box.insertAdjacentHTML('beforeend',`<div class="ai-msg">Output: Gambar hasil observasi "${q}"</div><img src="${imgUrl}" />`);
     }
-    // Video YouTube embed (demo)
+    // Video YouTube
     else if(low.includes("video")||low.includes("vidio")||low.includes("visio")){
       sysLog.innerHTML="🤖 Quantum: VIDEO STREAM SYNCED.";
-      const keyword=encodeURIComponent(low.replace(/^(video|vidio|visio)\s*/i,''));
-      const ytEmbed=`https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1`; // contoh embed, bisa disesuaikan API
+      const ytEmbed=`https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1`; // demo embed
       box.insertAdjacentHTML('beforeend',`<div class="ai-msg">Output: Video sesuai perintah "${q}"</div><iframe width="100%" height="250" src="${ytEmbed}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`);
     }
-    // Voice / TTS sederhana
+    // Voice / TTS
     else if(low.includes("voice")||low.includes("vois")||low.includes("audio")){
       sysLog.innerHTML="🤖 Quantum: AUDIO STREAM SYNCED.";
-      const msg=low.replace(/^(voice|vois|audio)\s*/i,'Halo bro! Ini suara simulasi TTS untuk perintah kamu.');
+      const msg=low.replace(/^(voice|vois|audio)\s*/i,'Halo bro! Ini suara TTS simulasi.');
       const utter=new SpeechSynthesisUtterance(msg);
       speechSynthesis.speak(utter);
       box.insertAdjacentHTML('beforeend',`<div class="ai-msg">Output: Memutar voice sesuai perintah "${q}"</div>`);
     }
-    // Chat biasa
+    // Jawaban cerdas via OpenAI API
     else{
       sysLog.innerHTML="🤖 Quantum: RESPONSE GENERATED.";
-      let response="";
-      if(low.includes("apa kabar")) response="Halo bro! Gue sehat 😎, lo gimana?";
-      else if(low.includes("halo")) response="Halo bro! Selamat datang di Quantum OS!";
-      else response="🤖 Quantum: ANALYSIS COMPLETE. Respon telah disinkronkan ke dalam Matrix.";
-      box.insertAdjacentHTML('beforeend',`<div class="ai-msg">${response}</div>`);
+      try{
+        const resp=await fetch("https://api.openai.com/v1/chat/completions",{
+          method:"POST",
+          headers:{
+            "Content-Type":"application/json",
+            "Authorization":`Bearer ${OPENAI_KEY}`
+          },
+          body:JSON.stringify({
+            model:"gpt-3.5-turbo",
+            messages:[{role:"user", content:q}]
+          })
+        });
+        const data=await resp.json();
+        const answer=data.choices[0].message.content;
+        box.insertAdjacentHTML('beforeend',`<div class="ai-msg">${answer}</div>`);
+      }catch(e){
+        box.insertAdjacentHTML('beforeend',`<div class="ai-msg">🤖 Quantum: Jawaban gagal, coba lagi. Error: ${e}</div>`);
+      }
     }
 
     box.lastElementChild.scrollIntoView({behavior:'smooth'});
