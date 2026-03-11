@@ -12,23 +12,16 @@ body{
   display: flex; flex-direction: column; height: 100vh;
 }
 header{ text-align:center; padding:10px; border-bottom:1px solid cyan; font-size:18px; flex-shrink: 0; }
-
-/* MONITOR AREA DENGAN AUTO-SCROLL */
 #scrollArea{
   flex: 1; overflow-y: auto; padding: 15px;
   display: flex; flex-direction: column; scroll-behavior: smooth;
 }
-
-/* FONT SIZE STANDAR 14/16px */
 .user-log { font-size: 14px; color: #0ff; margin-top: 15px; border-left: 2px solid cyan; padding-left: 10px; }
 .sys-log { font-size: 14px; color: yellow; margin-bottom: 5px; font-weight: bold; }
 .ai-msg { font-size: 16px; color: #fff; line-height: 1.5; margin-bottom: 12px; }
-
 canvas, img, video, audio {
   max-width:100%; border-radius: 8px; border: 1px solid cyan; margin-top: 10px; flex-shrink: 0;
 }
-
-/* INPUT TERMINAL DI BAWAH */
 .input-area {
   padding: 10px; background: rgba(0,0,0,0.8); border-top: 1px solid cyan; flex-shrink: 0;
 }
@@ -44,39 +37,38 @@ footer { text-align:center; font-size:10px; padding:5px; opacity: 0.5; }
 </style>
 </head>
 <body>
-
 <header>⚛ QUANTUM DRUKANDA OS</header>
-
 <div id="scrollArea">
   <div style="height: 180px; min-height: 180px; flex-shrink: 0;"><canvas id="chart"></canvas></div>
   <div id="chat"></div>
 </div>
-
 <div class="input-area">
   <select id="symbol">
     <option>BTCUSDT</option><option>ETHUSDT</option>
   </select>
   <button onclick="loadChart()">⚡ SYNC MARKET MATRIX</button>
   
-  <input id="q" placeholder="Contoh: 'Vidio kucing' atau 'Gambar bebek'..." onkeydown="if(event.key==='Enter') ask()">
+  <input id="q" placeholder="Contoh: 'Vidio kucing', 'Gambar bebek', atau 'Lagu soneta'..." onkeydown="if(event.key==='Enter') ask()">
   <button onclick="ask()" style="background:#0ff">⚡ EXECUTE QUANTUM</button>
 </div>
-
 <footer>Author: Dadan Sukaryat Putra</footer>
-
 <script>
-// --- KONFIGURASI API BRO ---
-const API_KEY = "  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTis_k"; 
+// Masukin token Binance lo di bawah bro
+const API_KEY = "  AIzaSyBBqz083U14kYdKeE8I6pWwyCBmAVTisk"; 
+
 let chart, marketData = [];
 
+// --- CHART BINANCE ---
 async function loadChart(){
   try {
     let sym = document.getElementById("symbol").value;
     let url = `https://api.binance.com/api/v3/klines?symbol=${sym}&interval=1h&limit=50`;
-    let res = await fetch(url, { headers: { 'X-MBX-APIKEY': API_KEY } });
+    let res = await fetch(url, {
+      headers: { 'X-MBX-APIKEY': API_KEY }
+    });
     marketData = await res.json();
-  } catch(e) { console.log("API Error"); }
-  
+  } catch(e) { console.log("API Error", e); }
+
   if(marketData.length > 0) {
     let prices = marketData.map(c => parseFloat(c[4]));
     let labels = marketData.map(c => new Date(c[0]).toLocaleTimeString());
@@ -90,48 +82,51 @@ async function loadChart(){
   }
 }
 
-// --- LOGIKA CERDAS NYAMBUNG & AUTO-SCROLL ---
+// --- QUANTUM LOGIC ---
 async function ask() {
   const input = document.getElementById("q");
   const box = document.getElementById("chat");
   const scrollArea = document.getElementById("scrollArea");
   const q = input.value.trim();
   if(!q) return;
-
-  // Log Input (14px)
+  
   box.innerHTML += `<div class="user-log">> Executing: ${q}</div>`;
   const id = "sys-" + Date.now();
   box.innerHTML += `<div id="${id}" class="sys-log">[SYS]: ANALYZING CAUSALITY...</div>`;
-  
   input.value = "";
-  // Instant Scroll agar log kelihatan
+
   scrollArea.scrollTop = scrollArea.scrollHeight;
 
   setTimeout(() => {
     let low = q.toLowerCase();
     let sysLog = document.getElementById(id);
-    
-    // PEMILAH INTENT YANG GAHAR & VALID
+
+    // Video
     if (low.includes("video") || low.includes("vidio") || low.includes("visio")) {
       sysLog.innerHTML = "🤖 Quantum: VIDEO STREAM SYNCED.";
-      box.innerHTML += `<div class="ai-msg">Output: Menampilkan Video sesuai perintah "${q}"</div>
-                        <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>`;
+      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Menampilkan Video sesuai perintah "${q}"</div>
+                                           <video src="https://www.w3schools.com/html/mov_bbb.mp4" controls autoplay></video>`);
     } 
+    // Gambar / foto
     else if (low.includes("gambar") || low.includes("poto") || low.includes("foto")) {
       sysLog.innerHTML = "🤖 Quantum: VISUALIZATION SUCCESS.";
-      // Pakai keyword input agar gambar lebih nyambung
-      box.innerHTML += `<div class="ai-msg">Output: Gambar hasil observasi "${q}"</div>
-                        <img src="https://picsum.photos/seed/${low}/400/250" />`;
+      const imgSeed = encodeURIComponent(low.substring(0,20));
+      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Gambar hasil observasi "${q}"</div>
+                                           <img src="https://picsum.photos/seed/${imgSeed}/400/250" />`);
     } 
+    // Musik / lagu
+    else if (low.includes("lagu") || low.includes("musik") || low.includes("soneta")) {
+      sysLog.innerHTML = "🤖 Quantum: AUDIO STREAM SYNCED.";
+      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Output: Memutar audio sesuai perintah "${q}"</div>
+                                           <audio src="https://www.w3schools.com/html/horse.mp3" controls autoplay></audio>`);
+    } 
+    // Default text
     else {
       sysLog.innerHTML = "🤖 Quantum: ANALYSIS COMPLETE.";
-      box.innerHTML += `<div class="ai-msg">Respon: "${q}" telah disinkronkan ke dalam Matrix.</div>`;
+      box.insertAdjacentHTML('beforeend', `<div class="ai-msg">Respon: "${q}" telah disinkronkan ke dalam Matrix.</div>`);
     }
 
-    // AUTO-SCROLL FIX: Layar naik otomatis ke jawaban terbaru
-    setTimeout(() => {
-      scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
-    }, 100);
+    box.lastElementChild.scrollIntoView({ behavior: 'smooth' });
   }, 500);
 }
 
